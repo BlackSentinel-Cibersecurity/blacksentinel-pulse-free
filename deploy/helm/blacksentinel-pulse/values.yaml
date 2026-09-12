@@ -1,0 +1,132 @@
+# Default values for blacksentinel-pulse
+replicaCount:
+  backend: 2
+  celeryWorker: 2
+  frontend: 2
+
+image:
+  backend:
+    repository: ghcr.io/blacksentinel/pulse/backend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  frontend:
+    repository: ghcr.io/blacksentinel/pulse/frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+service:
+  type: ClusterIP
+  backendPort: 8000
+  frontendPort: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: pulse.yourdomain.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          backend:
+            service:
+              name: blacksentinel-pulse-backend
+              port:
+                number: 8000
+        - path: /ws
+          pathType: Prefix
+          backend:
+            service:
+              name: blacksentinel-pulse-backend
+              port:
+                number: 8000
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: blacksentinel-pulse-frontend
+              port:
+                number: 80
+  tls:
+    - secretName: blacksentinel-pulse-tls
+      hosts:
+        - pulse.yourdomain.com
+
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: ""
+    username: pulse
+    password: ""
+    database: blacksentinel_pulse
+  primary:
+    persistence:
+      size: 50Gi
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    password: ""
+  master:
+    persistence:
+      size: 10Gi
+
+neo4j:
+  enabled: true
+  neo4j:
+    name: neo4j
+    password: ""
+  persistence:
+    size: 50Gi
+  resources:
+    requests:
+      memory: 2Gi
+    limits:
+      memory: 4Gi
+
+resources:
+  backend:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  celeryWorker:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  frontend:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+
+env:
+  secretKey: ""
+  databaseUrl: ""
+  redisUrl: ""
+  neo4jUri: ""
+  neo4jUser: "neo4j"
+  neo4jPassword: ""

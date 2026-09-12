@@ -1,0 +1,33 @@
+MIT License
+
+Copyright (c) 2026 BlackSentinel
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+# ---------------------------------------------------------------------------
+# NOTE FOR THE BLACKSENTINEL TEAM (not part of the license text above):
+# MIT was chosen as the most standard, unsurprising default for a public
+# "free edition" repo — it was not previously decided anywhere in this
+# codebase (the old README badge linked to a LICENSE file that didn't
+# exist, and called itself "proprietary"). If you want something that
+# specifically discourages a competitor re-hosting this as their own paid
+# SaaS (e.g. AGPL-3.0, or a source-available license like BSL), swap this
+# file — that's a business decision, not a technical one, and shouldn't be
+# picked silently on your behalf beyond this reasonable default.
+# ---------------------------------------------------------------------------

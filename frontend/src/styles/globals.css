@@ -1,0 +1,287 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sentinel-black: #0A0A0A;
+  --sentinel-dark: #111111;
+  --sentinel-orange: #FF6B2C;
+  --sentinel-orange-glow: rgba(255, 107, 44, 0.3);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #0A0A0A;
+  color: #F5F5F5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1A1A1A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3D3D3D;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+/* Pulse animation for live indicators */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--sentinel-orange);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* Scan line effect */
+.scan-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--sentinel-orange), transparent);
+  animation: scanLine 3s linear infinite;
+}
+
+@keyframes scanLine {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+/* Grid background pattern */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 107, 44, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 107, 44, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Glowing border effect */
+.glow-border {
+  border: 1px solid rgba(255, 107, 44, 0.2);
+  box-shadow: 0 0 15px rgba(255, 107, 44, 0.1);
+}
+
+.glow-border:hover {
+  border-color: rgba(255, 107, 44, 0.4);
+  box-shadow: 0 0 25px rgba(255, 107, 44, 0.2);
+}
+
+/* Risk score gradient */
+.risk-gradient {
+  background: linear-gradient(135deg, #34D399 0%, #FFB020 50%, #FF3B3B 100%);
+}
+
+/* Card styles */
+.card {
+  @apply bg-sentinel-gray-900 border border-sentinel-gray-700 rounded-xl;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  @apply border-sentinel-orange-500/30;
+  box-shadow: 0 0 30px rgba(255, 107, 44, 0.1);
+}
+
+/* Stat card */
+.stat-card {
+  @apply card p-6 relative overflow-hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--sentinel-orange), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply px-4 py-2 bg-sentinel-orange-500 text-white font-medium rounded-lg
+    hover:bg-sentinel-orange-600 transition-all duration-200
+    focus:outline-none focus:ring-2 focus:ring-sentinel-orange-500/50;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-sentinel-gray-700 text-sentinel-white font-medium rounded-lg
+    hover:bg-sentinel-gray-600 transition-all duration-200
+    border border-sentinel-gray-600 hover:border-sentinel-gray-500;
+}
+
+.btn-ghost {
+  @apply px-4 py-2 text-sentinel-gray-300 font-medium rounded-lg
+    hover:bg-sentinel-gray-800 hover:text-white transition-all duration-200;
+}
+
+/* Input styles */
+.input {
+  @apply w-full px-4 py-2.5 bg-sentinel-gray-800 border border-sentinel-gray-600
+    rounded-lg text-sentinel-white placeholder-sentinel-gray-400
+    focus:outline-none focus:border-sentinel-orange-500 focus:ring-1 focus:ring-sentinel-orange-500/30
+    transition-all duration-200;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-critical {
+  @apply bg-red-500/20 text-red-400 border border-red-500/30;
+}
+
+.badge-high {
+  @apply bg-sentinel-orange-500/20 text-sentinel-orange-400 border border-sentinel-orange-500/30;
+}
+
+.badge-medium {
+  @apply bg-yellow-500/20 text-yellow-400 border border-yellow-500/30;
+}
+
+.badge-low {
+  @apply bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+}
+
+.badge-info {
+  @apply bg-blue-500/20 text-blue-400 border border-blue-500/30;
+}
+
+/* Table styles */
+.table-row {
+  @apply border-b border-sentinel-gray-800 hover:bg-sentinel-gray-800/50 transition-colors;
+}
+
+/* Graph node */
+.graph-node {
+  @apply transition-all duration-200 cursor-pointer;
+}
+
+.graph-node:hover {
+  filter: brightness(1.2);
+}
+
+/* Tooltip */
+.tooltip {
+  @apply absolute z-50 px-3 py-2 text-sm bg-sentinel-gray-800 border border-sentinel-gray-600
+    rounded-lg shadow-xl pointer-events-none opacity-0 transition-opacity duration-200;
+}
+
+.tooltip.visible {
+  @apply opacity-100;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply w-5 h-5 border-2 border-sentinel-gray-600 border-t-sentinel-orange-500 rounded-full;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Progress bar */
+.progress-bar {
+  @apply h-2 bg-sentinel-gray-700 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-gradient-to-r from-sentinel-orange-600 to-sentinel-orange-400
+    transition-all duration-500 ease-out;
+}
+
+/* Noise texture overlay */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.02;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Logo glow animation */
+@keyframes logoGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(255, 107, 44, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 25px rgba(255, 107, 44, 0.5));
+  }
+}
+
+.logo-glow {
+  animation: logoGlow 3s ease-in-out infinite;
+}
+
+/* Shield pulse animation */
+@keyframes shieldPulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 15px rgba(255, 107, 44, 0.4));
+  }
+  50% {
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 30px rgba(255, 107, 44, 0.6));
+  }
+}
+
+.shield-pulse {
+  animation: shieldPulse 4s ease-in-out infinite;
+}
