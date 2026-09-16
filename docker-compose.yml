@@ -28,6 +28,7 @@ services:
       retries: 5
 
   backend:
+    image: ghcr.io/blacksentinel-cibersecurity/blacksentinel-pulse-free/backend:main
     build:
       context: .
       dockerfile: Dockerfile.backend
@@ -47,6 +48,7 @@ services:
         condition: service_healthy
 
   frontend:
+    image: ghcr.io/blacksentinel-cibersecurity/blacksentinel-pulse-free/frontend:main
     build:
       context: .
       dockerfile: Dockerfile.frontend
