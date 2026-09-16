@@ -1,6 +1,4 @@
-import asyncio
 import socket
-from typing import Optional
 
 import nmap
 
@@ -54,6 +52,7 @@ class NetworkDiscoveryEngine(BaseDiscoveryEngine):
     async def validate_target(self, target: str) -> bool:
         """Validate IP or CIDR range."""
         import ipaddress
+
         try:
             if "/" in target:
                 ipaddress.ip_network(target, strict=False)
@@ -107,32 +106,38 @@ class NetworkDiscoveryEngine(BaseDiscoveryEngine):
                         ports_data.append(port_data)
 
                         # Create asset for each open port
-                        self.add_asset({
-                            "name": f"{host}:{port}",
-                            "asset_type": "ip_address",
-                            "ip_address": host,
-                            "port": port,
-                            "protocol": proto,
-                            "service": port_info.get("name", "unknown"),
-                            "version": port_info.get("version", ""),
-                            "discovery_method": "port_scan",
-                            "metadata": {
-                                "hostname": nm[host].hostname(),
-                                "os_detection": nm[host].get("osmatch", []),
-                            },
-                        })
+                        self.add_asset(
+                            {
+                                "name": f"{host}:{port}",
+                                "asset_type": "ip_address",
+                                "ip_address": host,
+                                "port": port,
+                                "protocol": proto,
+                                "service": port_info.get("name", "unknown"),
+                                "version": port_info.get("version", ""),
+                                "discovery_method": "port_scan",
+                                "metadata": {
+                                    "hostname": nm[host].hostname(),
+                                    "os_detection": nm[host].get("osmatch", []),
+                                },
+                            }
+                        )
 
-                    host_data["protocols"].append({
-                        "name": proto,
-                        "ports": ports_data,
-                    })
+                    host_data["protocols"].append(
+                        {
+                            "name": proto,
+                            "ports": ports_data,
+                        }
+                    )
 
                 results["hosts"].append(host_data)
-                results["open_ports"].extend([
-                    f"{p['port']}/{proto}"
-                    for proto_data in host_data["protocols"]
-                    for p in proto_data["ports"]
-                ])
+                results["open_ports"].extend(
+                    [
+                        f"{p['port']}/{proto}"
+                        for proto_data in host_data["protocols"]
+                        for p in proto_data["ports"]
+                    ]
+                )
 
         except Exception as e:
             self.logger.error("nmap_scan_failed", target=target, error=str(e))

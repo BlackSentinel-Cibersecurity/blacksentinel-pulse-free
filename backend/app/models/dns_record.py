@@ -1,8 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, ForeignKey, JSON
-)
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -10,10 +8,13 @@ from app.core.database import Base
 
 class DNSRecord(Base):
     """DNS record associated with an asset."""
+
     __tablename__ = "dns_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    record_type = Column(String(10), nullable=False, index=True)  # A, AAAA, CNAME, MX, TXT, NS, SOA, SRV, CAA, PTR
+    record_type = Column(
+        String(10), nullable=False, index=True
+    )  # A, AAAA, CNAME, MX, TXT, NS, SOA, SRV, CAA, PTR
     name = Column(String(500), nullable=False, index=True)
     value = Column(String(500), nullable=False)
     ttl = Column(Integer)

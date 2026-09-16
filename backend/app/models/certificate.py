@@ -1,7 +1,14 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, ForeignKey, Text, JSON
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Text,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 
@@ -10,6 +17,7 @@ from app.core.database import Base
 
 class Certificate(Base):
     """SSL/TLS certificate information."""
+
     __tablename__ = "certificates"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

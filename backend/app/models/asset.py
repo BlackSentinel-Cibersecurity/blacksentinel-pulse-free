@@ -2,7 +2,15 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, Text, JSON, Float
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    JSON,
+    Float,
 )
 from sqlalchemy.orm import relationship
 
@@ -53,6 +61,7 @@ class AssetStatus(str, enum.Enum):
 
 class Asset(Base):
     """Core asset model representing any discovered entity in the attack surface."""
+
     __tablename__ = "assets"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -64,7 +73,9 @@ class Asset(Base):
     # Risk scoring
     risk_score = Column(Float, default=0.0, index=True)
     risk_factors = Column(JSON, default=dict)
-    criticality = Column(String(20), default="medium")  # critical, high, medium, low, info
+    criticality = Column(
+        String(20), default="medium"
+    )  # critical, high, medium, low, info
 
     # Discovery metadata
     discovery_method = Column(String(100))  # passive, active, osint, integration
@@ -125,13 +136,20 @@ class Asset(Base):
 
 class AssetRelationship(Base):
     """Relationship between two assets (also stored in Neo4j for graph queries)."""
+
     __tablename__ = "asset_relationships"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    source_asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False, index=True)
-    target_asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False, index=True)
+    source_asset_id = Column(
+        Integer, ForeignKey("assets.id"), nullable=False, index=True
+    )
+    target_asset_id = Column(
+        Integer, ForeignKey("assets.id"), nullable=False, index=True
+    )
 
-    relationship_type = Column(String(100), nullable=False)  # resolves_to, points_to, hosts, contains, etc.
+    relationship_type = Column(
+        String(100), nullable=False
+    )  # resolves_to, points_to, hosts, contains, etc.
     confidence = Column(Float, default=1.0)
     rel_metadata = Column(JSON, default=dict)
     is_bidirectional = Column(Boolean, default=False)
@@ -148,6 +166,7 @@ class AssetRelationship(Base):
 
 class AssetTag(Base):
     """Tags for asset classification and filtering."""
+
     __tablename__ = "asset_tags"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -166,11 +185,14 @@ class AssetTag(Base):
 
 class AssetMetadata(Base):
     """Additional metadata for specific asset types."""
+
     __tablename__ = "asset_metadata"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False, index=True)
-    metadata_type = Column(String(100), nullable=False)  # ssl_info, whois, dns, cloud, etc.
+    metadata_type = Column(
+        String(100), nullable=False
+    )  # ssl_info, whois, dns, cloud, etc.
     data = Column(JSON, nullable=False)
     source = Column(String(100))
     collected_at = Column(DateTime, default=datetime.utcnow)

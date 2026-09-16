@@ -2,7 +2,15 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, Text, JSON
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Text,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 
@@ -18,6 +26,7 @@ class IntegrationStatus(str, enum.Enum):
 
 class Integration(Base):
     """External integration configuration. API keys encrypted at rest."""
+
     __tablename__ = "integrations"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -48,17 +57,20 @@ class Integration(Base):
     def config(self):
         """Decrypt config for internal use only. NEVER return to API."""
         from app.core.vault import decrypt_config
+
         return decrypt_config(self.config_encrypted or {})
 
     def set_config(self, plaintext_config: dict):
         """Encrypt and store config. Called when saving from API."""
         from app.core.vault import encrypt_config
+
         self.config_encrypted = encrypt_config(plaintext_config)
 
     @property
     def config_masked(self):
         """Return config with all secrets masked for API responses."""
         from app.core.vault import mask_dict_secrets
+
         return mask_dict_secrets(self.config_encrypted or {})
 
     def __repr__(self):

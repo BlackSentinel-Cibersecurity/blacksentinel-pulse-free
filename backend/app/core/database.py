@@ -10,10 +10,16 @@ if _database_url.startswith("postgresql"):
     if not os.environ.get("DATABASE_URL"):
         try:
             import asyncpg
+
             # Quick check if PostgreSQL is reachable
             import asyncio
+
             loop = asyncio.new_event_loop()
-            loop.run_until_complete(asyncpg.connect(_database_url.replace("postgresql+asyncpg://", "postgresql://")))
+            loop.run_until_complete(
+                asyncpg.connect(
+                    _database_url.replace("postgresql+asyncpg://", "postgresql://")
+                )
+            )
             loop.close()
         except Exception:
             _database_url = "sqlite+aiosqlite:///./blacksentinel_pulse.db"
@@ -22,7 +28,7 @@ engine = create_async_engine(
     _database_url,
     echo=settings.DATABASE_ECHO,
     pool_pre_ping=True,
-    **({"pool_size": 20, "max_overflow": 10} if "sqlite" not in _database_url else {})
+    **({"pool_size": 20, "max_overflow": 10} if "sqlite" not in _database_url else {}),
 )
 
 async_session_factory = async_sessionmaker(
@@ -32,6 +38,7 @@ async_session_factory = async_sessionmaker(
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
+
     pass
 
 
@@ -44,6 +51,7 @@ class Neo4jDriver:
     async def get_driver(cls):
         try:
             from neo4j import AsyncGraphDatabase
+
             if cls._driver is None:
                 cls._driver = AsyncGraphDatabase.driver(
                     settings.NEO4J_URI,

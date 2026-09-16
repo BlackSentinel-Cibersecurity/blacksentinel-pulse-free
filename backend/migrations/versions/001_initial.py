@@ -60,7 +60,12 @@ def upgrade() -> None:
         sa.Column("last_login", sa.DateTime(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now()),
-        sa.Column("organization_id", sa.Integer(), sa.ForeignKey("organizations.id"), nullable=True),
+        sa.Column(
+            "organization_id",
+            sa.Integer(),
+            sa.ForeignKey("organizations.id"),
+            nullable=True,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("email"),
         sa.UniqueConstraint("username"),
@@ -102,7 +107,12 @@ def upgrade() -> None:
         sa.Column("registrant_org", sa.String(255), nullable=True),
         sa.Column("expires_at", sa.DateTime(), nullable=True),
         sa.Column("renewal_cost", sa.Float(), nullable=True),
-        sa.Column("organization_id", sa.Integer(), sa.ForeignKey("organizations.id"), nullable=False),
+        sa.Column(
+            "organization_id",
+            sa.Integer(),
+            sa.ForeignKey("organizations.id"),
+            nullable=False,
+        ),
         sa.Column("parent_id", sa.Integer(), sa.ForeignKey("assets.id"), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now()),
@@ -153,7 +163,9 @@ def upgrade() -> None:
         sa.Column("asset_id", sa.Integer(), sa.ForeignKey("assets.id"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("ix_vulnerabilities_external_id", "vulnerabilities", ["external_id"])
+    op.create_index(
+        "ix_vulnerabilities_external_id", "vulnerabilities", ["external_id"]
+    )
 
     # Scans
     op.create_table(
@@ -187,7 +199,12 @@ def upgrade() -> None:
         sa.Column("engine_version", sa.String(20), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now()),
-        sa.Column("organization_id", sa.Integer(), sa.ForeignKey("organizations.id"), nullable=False),
+        sa.Column(
+            "organization_id",
+            sa.Integer(),
+            sa.ForeignKey("organizations.id"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("scan_id"),
     )
@@ -213,7 +230,12 @@ def upgrade() -> None:
         sa.Column("ai_recommendation", sa.Text(), nullable=True),
         sa.Column("auto_remediation_available", sa.Boolean(), server_default="false"),
         sa.Column("asset_id", sa.Integer(), sa.ForeignKey("assets.id"), nullable=True),
-        sa.Column("vulnerability_id", sa.Integer(), sa.ForeignKey("vulnerabilities.id"), nullable=True),
+        sa.Column(
+            "vulnerability_id",
+            sa.Integer(),
+            sa.ForeignKey("vulnerabilities.id"),
+            nullable=True,
+        ),
         sa.Column("business_impact", sa.String(50), nullable=True),
         sa.Column("blast_radius", sa.Integer(), server_default="0"),
         sa.Column("exploitability", sa.Float(), nullable=True),
@@ -221,17 +243,26 @@ def upgrade() -> None:
         sa.Column("raw_data", postgresql.JSON(), server_default="{}"),
         sa.Column("notified", sa.Boolean(), server_default="false"),
         sa.Column("notification_channels", postgresql.JSON(), server_default="[]"),
-        sa.Column("acknowledged_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
+        sa.Column(
+            "acknowledged_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True
+        ),
         sa.Column("acknowledged_at", sa.DateTime(), nullable=True),
         sa.Column("resolution_notes", sa.Text(), nullable=True),
-        sa.Column("resolved_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
+        sa.Column(
+            "resolved_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True
+        ),
         sa.Column("resolved_at", sa.DateTime(), nullable=True),
         sa.Column("auto_resolved", sa.Boolean(), server_default="false"),
         sa.Column("sla_deadline", sa.DateTime(), nullable=True),
         sa.Column("sla_breached", sa.Boolean(), server_default="false"),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now()),
-        sa.Column("organization_id", sa.Integer(), sa.ForeignKey("organizations.id"), nullable=False),
+        sa.Column(
+            "organization_id",
+            sa.Integer(),
+            sa.ForeignKey("organizations.id"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("alert_id"),
     )
@@ -264,7 +295,11 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now()),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("ix_threat_intelligence_indicator_value", "threat_intelligence", ["indicator_value"])
+    op.create_index(
+        "ix_threat_intelligence_indicator_value",
+        "threat_intelligence",
+        ["indicator_value"],
+    )
 
     # Certificates
     op.create_table(
@@ -289,7 +324,12 @@ def upgrade() -> None:
         sa.Column("key_size", sa.Integer(), nullable=True),
         sa.Column("signature_algorithm", sa.String(50), nullable=True),
         sa.Column("chain_depth", sa.Integer(), server_default="0"),
-        sa.Column("parent_certificate_id", sa.Integer(), sa.ForeignKey("certificates.id"), nullable=True),
+        sa.Column(
+            "parent_certificate_id",
+            sa.Integer(),
+            sa.ForeignKey("certificates.id"),
+            nullable=True,
+        ),
         sa.Column("ct_log", postgresql.JSON(), server_default="[]"),
         sa.Column("first_seen_ct", sa.DateTime(), nullable=True),
         sa.Column("source", sa.String(50), nullable=True),
@@ -402,8 +442,12 @@ def upgrade() -> None:
     op.create_table(
         "asset_relationships",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("source_asset_id", sa.Integer(), sa.ForeignKey("assets.id"), nullable=False),
-        sa.Column("target_asset_id", sa.Integer(), sa.ForeignKey("assets.id"), nullable=False),
+        sa.Column(
+            "source_asset_id", sa.Integer(), sa.ForeignKey("assets.id"), nullable=False
+        ),
+        sa.Column(
+            "target_asset_id", sa.Integer(), sa.ForeignKey("assets.id"), nullable=False
+        ),
         sa.Column("relationship_type", sa.String(100), nullable=False),
         sa.Column("confidence", sa.Float(), server_default="1.0"),
         sa.Column("metadata", postgresql.JSON(), server_default="{}"),
@@ -428,10 +472,17 @@ def upgrade() -> None:
         sa.Column("last_triggered", sa.DateTime(), nullable=True),
         sa.Column("trigger_count", sa.Integer(), server_default="0"),
         sa.Column("created_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
-        sa.Column("approved_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
+        sa.Column(
+            "approved_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True
+        ),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now()),
-        sa.Column("organization_id", sa.Integer(), sa.ForeignKey("organizations.id"), nullable=False),
+        sa.Column(
+            "organization_id",
+            sa.Integer(),
+            sa.ForeignKey("organizations.id"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
 
@@ -451,7 +502,12 @@ def upgrade() -> None:
         sa.Column("created_by", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.func.now()),
-        sa.Column("organization_id", sa.Integer(), sa.ForeignKey("organizations.id"), nullable=False),
+        sa.Column(
+            "organization_id",
+            sa.Integer(),
+            sa.ForeignKey("organizations.id"),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_integrations_provider", "integrations", ["provider"])
@@ -472,7 +528,9 @@ def upgrade() -> None:
         sa.Column("affected_users", sa.Integer(), server_default="0"),
         sa.Column("data_classification", sa.String(50), nullable=True),
         sa.Column("estimated_impact", sa.String(50), nullable=True),
-        sa.Column("assigned_to", sa.Integer(), sa.ForeignKey("users.id"), nullable=True),
+        sa.Column(
+            "assigned_to", sa.Integer(), sa.ForeignKey("users.id"), nullable=True
+        ),
         sa.Column("response_team", postgresql.JSON(), server_default="[]"),
         sa.Column("timeline", postgresql.JSON(), server_default="[]"),
         sa.Column("actions_taken", postgresql.JSON(), server_default="[]"),

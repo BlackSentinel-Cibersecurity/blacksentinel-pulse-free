@@ -68,13 +68,13 @@ async def list_vulnerabilities(
         query = query.where(Vulnerability.asset_id == asset_id)
     if search:
         query = query.where(
-            Vulnerability.title.ilike(f"%{search}%") |
-            Vulnerability.external_id.ilike(f"%{search}%")
+            Vulnerability.title.ilike(f"%{search}%")
+            | Vulnerability.external_id.ilike(f"%{search}%")
         )
 
-    count = (await db.execute(
-        select(func.count()).select_from(query.subquery())
-    )).scalar()
+    count = (
+        await db.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar()
 
     query = query.order_by(Vulnerability.cvss_score.desc())
     query = query.offset((page - 1) * page_size).limit(page_size)
@@ -89,22 +89,24 @@ async def list_vulnerabilities(
         )
         asset_name = asset_result.scalar_one_or_none()
 
-        items.append(VulnResponse(
-            id=v.id,
-            external_id=v.external_id,
-            title=v.title,
-            description=v.description,
-            severity=v.severity,
-            cvss_score=v.cvss_score,
-            status=v.status,
-            exploit_available=v.exploit_available,
-            exploit_in_wild=v.exploit_in_wild,
-            patch_available=v.patch_available,
-            asset_id=v.asset_id,
-            asset_name=asset_name,
-            discovered_at=v.discovered_at,
-            risk_score=v.risk_score,
-        ))
+        items.append(
+            VulnResponse(
+                id=v.id,
+                external_id=v.external_id,
+                title=v.title,
+                description=v.description,
+                severity=v.severity,
+                cvss_score=v.cvss_score,
+                status=v.status,
+                exploit_available=v.exploit_available,
+                exploit_in_wild=v.exploit_in_wild,
+                patch_available=v.patch_available,
+                asset_id=v.asset_id,
+                asset_name=asset_name,
+                discovered_at=v.discovered_at,
+                risk_score=v.risk_score,
+            )
+        )
 
     return VulnListResponse(items=items, total=count, page=page, page_size=page_size)
 
@@ -115,60 +117,74 @@ async def get_vuln_stats(
     current_user: User = Depends(get_current_user),
 ):
     """Get vulnerability statistics."""
-    base = (
-        select(Vulnerability)
-        .join(Asset, Vulnerability.asset_id == Asset.id)
-        .where(Asset.organization_id == current_user.organization_id)
-    )
-
     # By severity
-    sev_query = select(Vulnerability.severity, func.count()).join(Asset).where(
-        Asset.organization_id == current_user.organization_id
-    ).group_by(Vulnerability.severity)
+    sev_query = (
+        select(Vulnerability.severity, func.count())
+        .join(Asset)
+        .where(Asset.organization_id == current_user.organization_id)
+        .group_by(Vulnerability.severity)
+    )
     sev_result = await db.execute(sev_query)
     by_severity = {str(row[0].value): row[1] for row in sev_result.all()}
 
     # By status
-    status_query = select(Vulnerability.status, func.count()).join(Asset).where(
-        Asset.organization_id == current_user.organization_id
-    ).group_by(Vulnerability.status)
+    status_query = (
+        select(Vulnerability.status, func.count())
+        .join(Asset)
+        .where(Asset.organization_id == current_user.organization_id)
+        .group_by(Vulnerability.status)
+    )
     status_result = await db.execute(status_query)
     by_status = {str(row[0].value): row[1] for row in status_result.all()}
 
     # Exploitable
-    exploitable = (await db.execute(
-        select(func.count()).select_from(
-            select(Vulnerability.id)
+    exploitable = (
+        await db.execute(
+            select(func.count()).select_from(
+                select(Vulnerability.id)
+                .join(Asset)
+                .where(
+                    and_(
+                        Asset.organization_id == current_user.organization_id,
+                        Vulnerability.exploit_available == True,
+                    )
+                )
+                .subquery()
+            )
+        )
+    ).scalar()
+
+    # Average CVSS
+    avg_cvss = (
+        await db.execute(
+            select(func.avg(Vulnerability.cvss_score))
+            .join(Asset)
+            .where(Asset.organization_id == current_user.organization_id)
+        )
+    ).scalar() or 0.0
+
+    # MTTR (Mean Time to Remediate)
+    mttr = (
+        await db.execute(
+            select(
+                func.avg(
+                    func.extract(
+                        "epoch",
+                        Vulnerability.remediated_at - Vulnerability.discovered_at,
+                    )
+                    / 86400
+                )
+            )
             .join(Asset)
             .where(
                 and_(
                     Asset.organization_id == current_user.organization_id,
-                    Vulnerability.exploit_available == True,
+                    Vulnerability.status == VulnerabilityStatus.REMEDIATED,
+                    Vulnerability.remediated_at.isnot(None),
                 )
             )
-            .subquery()
         )
-    )).scalar()
-
-    # Average CVSS
-    avg_cvss = (await db.execute(
-        select(func.avg(Vulnerability.cvss_score)).join(Asset).where(
-            Asset.organization_id == current_user.organization_id
-        )
-    )).scalar() or 0.0
-
-    # MTTR (Mean Time to Remediate)
-    mttr = (await db.execute(
-        select(func.avg(
-            func.extract('epoch', Vulnerability.remediated_at - Vulnerability.discovered_at) / 86400
-        )).join(Asset).where(
-            and_(
-                Asset.organization_id == current_user.organization_id,
-                Vulnerability.status == VulnerabilityStatus.REMEDIATED,
-                Vulnerability.remediated_at.isnot(None),
-            )
-        )
-    )).scalar() or 0.0
+    ).scalar() or 0.0
 
     return {
         "by_severity": by_severity,
@@ -227,9 +243,7 @@ async def update_vuln_status(
     vuln_id: int,
     new_status: VulnerabilityStatus,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Update vulnerability status."""
     result = await db.execute(

@@ -1,7 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
 
 import structlog
 
@@ -87,4 +86,4 @@ class BaseDiscoveryEngine(ABC):
                     attempt=attempt + 1,
                     error=str(e),
                 )
-                await asyncio.sleep(delay * (2 ** attempt))
+                await asyncio.sleep(delay * (2**attempt))

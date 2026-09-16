@@ -65,13 +65,12 @@ async def list_alerts(
         query = query.where(Alert.alert_type == alert_type)
     if search:
         query = query.where(
-            Alert.title.ilike(f"%{search}%") |
-            Alert.description.ilike(f"%{search}%")
+            Alert.title.ilike(f"%{search}%") | Alert.description.ilike(f"%{search}%")
         )
 
-    count = (await db.execute(
-        select(func.count()).select_from(query.subquery())
-    )).scalar()
+    count = (
+        await db.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar()
 
     query = query.order_by(Alert.created_at.desc())
     query = query.offset((page - 1) * page_size).limit(page_size)
@@ -96,44 +95,54 @@ async def get_alert_stats(
     org_id = current_user.organization_id
 
     # Open by severity
-    open_query = select(Alert.severity, func.count()).where(
-        and_(
-            Alert.organization_id == org_id,
-            Alert.status == AlertStatus.OPEN,
-        )
-    ).group_by(Alert.severity)
-    open_result = await db.execute(open_query)
-    open_by_severity = {str(row[0].value): row[1] for row in open_result.all()}
-
-    # Total open
-    total_open = (await db.execute(
-        select(func.count()).where(
+    open_query = (
+        select(Alert.severity, func.count())
+        .where(
             and_(
                 Alert.organization_id == org_id,
                 Alert.status == AlertStatus.OPEN,
             )
         )
-    )).scalar()
+        .group_by(Alert.severity)
+    )
+    open_result = await db.execute(open_query)
+    open_by_severity = {str(row[0].value): row[1] for row in open_result.all()}
+
+    # Total open
+    total_open = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Alert.organization_id == org_id,
+                    Alert.status == AlertStatus.OPEN,
+                )
+            )
+        )
+    ).scalar()
 
     # Auto-resolved
-    auto_resolved = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Alert.organization_id == org_id,
-                Alert.auto_resolved == True,
+    auto_resolved = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Alert.organization_id == org_id,
+                    Alert.auto_resolved == True,
+                )
             )
         )
-    )).scalar()
+    ).scalar()
 
     # SLA breaches
-    sla_breached = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Alert.organization_id == org_id,
-                Alert.sla_breached == True,
+    sla_breached = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Alert.organization_id == org_id,
+                    Alert.sla_breached == True,
+                )
             )
         )
-    )).scalar()
+    ).scalar()
 
     return {
         "open_by_severity": open_by_severity,
@@ -170,9 +179,7 @@ async def get_alert(
 async def acknowledge_alert(
     alert_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Acknowledge an alert."""
     result = await db.execute(
@@ -201,9 +208,7 @@ async def resolve_alert(
     alert_id: str,
     notes: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Resolve an alert."""
     result = await db.execute(
@@ -232,9 +237,7 @@ async def resolve_alert(
 async def mark_false_positive(
     alert_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Mark an alert as false positive."""
     result = await db.execute(

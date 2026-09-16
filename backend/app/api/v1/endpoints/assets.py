@@ -6,7 +6,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
-from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, RoleChecker
@@ -18,6 +17,7 @@ router = APIRouter()
 
 # --- Schemas ---
 
+
 class AssetCreate(BaseModel):
     name: str
     asset_type: AssetType
@@ -26,12 +26,14 @@ class AssetCreate(BaseModel):
     tags: list[str] = []
     extra_metadata: dict = {}
 
+
 class AssetUpdate(BaseModel):
     name: Optional[str] = None
     status: Optional[AssetStatus] = None
     tags: Optional[list[str]] = None
     extra_metadata: Optional[dict] = None
     criticality: Optional[str] = None
+
 
 class AssetResponse(BaseModel):
     id: int
@@ -73,6 +75,7 @@ class AssetStats(BaseModel):
 
 # --- Endpoints ---
 
+
 @router.get("/", response_model=AssetListResponse)
 async def list_assets(
     page: int = Query(1, ge=1),
@@ -83,7 +86,9 @@ async def list_assets(
     min_risk_score: Optional[float] = None,
     max_risk_score: Optional[float] = None,
     tags: Optional[str] = None,
-    sort_by: str = Query("risk_score", enum=["risk_score", "name", "created_at", "last_seen"]),
+    sort_by: str = Query(
+        "risk_score", enum=["risk_score", "name", "created_at", "last_seen"]
+    ),
     sort_order: str = Query("desc", enum=["asc", "desc"]),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -144,67 +149,86 @@ async def get_asset_stats(
     current_user: User = Depends(get_current_user),
 ):
     """Get asset statistics overview."""
-    base_query = select(Asset).where(Asset.organization_id == current_user.organization_id)
+    base_query = select(Asset).where(
+        Asset.organization_id == current_user.organization_id
+    )
 
-    total = (await db.execute(select(func.count()).select_from(base_query.subquery()))).scalar()
+    total = (
+        await db.execute(select(func.count()).select_from(base_query.subquery()))
+    ).scalar()
 
     # By type
-    type_query = select(Asset.asset_type, func.count()).where(
-        Asset.organization_id == current_user.organization_id
-    ).group_by(Asset.asset_type)
+    type_query = (
+        select(Asset.asset_type, func.count())
+        .where(Asset.organization_id == current_user.organization_id)
+        .group_by(Asset.asset_type)
+    )
     type_result = await db.execute(type_query)
     by_type = {str(row[0]): row[1] for row in type_result.all()}
 
     # By status
-    status_query = select(Asset.status, func.count()).where(
-        Asset.organization_id == current_user.organization_id
-    ).group_by(Asset.status)
+    status_query = (
+        select(Asset.status, func.count())
+        .where(Asset.organization_id == current_user.organization_id)
+        .group_by(Asset.status)
+    )
     status_result = await db.execute(status_query)
     by_status = {str(row[0]): row[1] for row in status_result.all()}
 
     # By criticality
-    crit_query = select(Asset.criticality, func.count()).where(
-        Asset.organization_id == current_user.organization_id
-    ).group_by(Asset.criticality)
+    crit_query = (
+        select(Asset.criticality, func.count())
+        .where(Asset.organization_id == current_user.organization_id)
+        .group_by(Asset.criticality)
+    )
     crit_result = await db.execute(crit_query)
     by_criticality = {str(row[0]): row[1] for row in crit_result.all()}
 
     # Average risk score
-    avg_risk = (await db.execute(
-        select(func.avg(Asset.risk_score)).where(
-            Asset.organization_id == current_user.organization_id
-        )
-    )).scalar() or 0.0
-
-    # High risk count
-    high_risk = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Asset.organization_id == current_user.organization_id,
-                Asset.risk_score >= 80,
+    avg_risk = (
+        await db.execute(
+            select(func.avg(Asset.risk_score)).where(
+                Asset.organization_id == current_user.organization_id
             )
         )
-    )).scalar()
+    ).scalar() or 0.0
+
+    # High risk count
+    high_risk = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Asset.organization_id == current_user.organization_id,
+                    Asset.risk_score >= 80,
+                )
+            )
+        )
+    ).scalar()
 
     # New in last 24h and 7d
     from datetime import timedelta
+
     now = datetime.utcnow()
-    new_24h = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Asset.organization_id == current_user.organization_id,
-                Asset.created_at >= now - timedelta(hours=24),
+    new_24h = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Asset.organization_id == current_user.organization_id,
+                    Asset.created_at >= now - timedelta(hours=24),
+                )
             )
         )
-    )).scalar()
-    new_7d = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Asset.organization_id == current_user.organization_id,
-                Asset.created_at >= now - timedelta(days=7),
+    ).scalar()
+    new_7d = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Asset.organization_id == current_user.organization_id,
+                    Asset.created_at >= now - timedelta(days=7),
+                )
             )
         )
-    )).scalar()
+    ).scalar()
 
     return AssetStats(
         total_assets=total,
@@ -245,9 +269,7 @@ async def get_asset(
 async def create_asset(
     asset_data: AssetCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Create a new asset."""
     asset = Asset(
@@ -272,9 +294,7 @@ async def update_asset(
     asset_id: int,
     asset_data: AssetUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Update an existing asset."""
     result = await db.execute(
@@ -305,9 +325,7 @@ async def update_asset(
 async def delete_asset(
     asset_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin"])),
 ):
     """Delete an asset."""
     result = await db.execute(
@@ -339,7 +357,11 @@ async def get_asset_relationships(
 
     driver = await Neo4jDriver.get_driver()
     if driver is None:
-        return {"asset_id": asset_id, "relationships": [], "message": "Graph database not available"}
+        return {
+            "asset_id": asset_id,
+            "relationships": [],
+            "message": "Graph database not available",
+        }
 
     try:
         async with driver.session() as session:
@@ -351,11 +373,13 @@ async def get_asset_relationships(
             result = await session.run(query, asset_id=asset_id, depth=depth)
             relationships = []
             async for record in result:
-                relationships.append({
-                    "path": record["path"],
-                    "nodes": record["nodes"],
-                    "relationships": record["rels"],
-                })
+                relationships.append(
+                    {
+                        "path": record["path"],
+                        "nodes": record["nodes"],
+                        "relationships": record["rels"],
+                    }
+                )
 
         return {"asset_id": asset_id, "relationships": relationships}
     except Exception as e:

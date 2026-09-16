@@ -1,6 +1,5 @@
 import numpy as np
-from typing import Any
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class RiskScoringEngine:
@@ -64,10 +63,7 @@ class RiskScoringEngine:
         }
 
         # Calculate weighted composite score
-        composite = sum(
-            scores[factor] * self.weights[factor]
-            for factor in scores
-        )
+        composite = sum(scores[factor] * self.weights[factor] for factor in scores)
 
         # Apply multipliers for critical conditions
         composite = self._apply_critical_multipliers(composite, asset_data)
@@ -96,11 +92,11 @@ class RiskScoringEngine:
         exploitable = sum(1 for v in vulns if v.get("exploit_available"))
 
         score = (
-            critical * 25 +
-            high * 15 +
-            medium * 8 +
-            exploitable * 20 +
-            min(len(vulns) * 2, 20)  # Volume factor
+            critical * 25
+            + high * 15
+            + medium * 8
+            + exploitable * 20
+            + min(len(vulns) * 2, 20)  # Volume factor
         )
 
         return min(100, score)
@@ -120,7 +116,15 @@ class RiskScoringEngine:
         score += min(len(open_ports) * 5, 30)
 
         # Exposed services
-        high_risk_services = ["ssh", "rdp", "ftp", "telnet", "mysql", "redis", "mongodb"]
+        high_risk_services = [
+            "ssh",
+            "rdp",
+            "ftp",
+            "telnet",
+            "mysql",
+            "redis",
+            "mongodb",
+        ]
         for port_info in open_ports:
             if port_info.get("service", "").lower() in high_risk_services:
                 score += 10
@@ -294,13 +298,21 @@ class RiskScoringEngine:
         recommendations = []
 
         if scores["vulnerability"] > 60:
-            recommendations.append("RemEDIATE critical and high-severity vulnerabilities immediately")
+            recommendations.append(
+                "RemEDIATE critical and high-severity vulnerabilities immediately"
+            )
         if scores["exposure"] > 60:
-            recommendations.append("Reduce attack surface by removing unnecessary public exposure")
+            recommendations.append(
+                "Reduce attack surface by removing unnecessary public exposure"
+            )
         if scores["threat_intel"] > 40:
-            recommendations.append("Investigate threat intelligence matches and isolate if necessary")
+            recommendations.append(
+                "Investigate threat intelligence matches and isolate if necessary"
+            )
         if scores["configuration"] > 40:
-            recommendations.append("Fix security configuration issues (SSL, headers, DNS)")
+            recommendations.append(
+                "Fix security configuration issues (SSL, headers, DNS)"
+            )
         if scores["age"] > 40:
             recommendations.append("Update software and apply latest patches")
         if scores["network_position"] > 40:
@@ -324,7 +336,9 @@ class RiskScoringEngine:
         future_x = np.arange(len(scores), len(scores) + 7)
         predictions = np.polyval(coeffs, future_x)
 
-        trend = "increasing" if slope > 0.5 else "decreasing" if slope < -0.5 else "stable"
+        trend = (
+            "increasing" if slope > 0.5 else "decreasing" if slope < -0.5 else "stable"
+        )
 
         return {
             "trend": trend,

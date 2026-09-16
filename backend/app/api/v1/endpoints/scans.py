@@ -68,9 +68,9 @@ async def list_scans(
     if scan_type:
         query = query.where(Scan.scan_type == scan_type)
 
-    count = (await db.execute(
-        select(func.count()).select_from(query.subquery())
-    )).scalar()
+    count = (
+        await db.execute(select(func.count()).select_from(query.subquery()))
+    ).scalar()
 
     query = query.order_by(Scan.created_at.desc())
     query = query.offset((page - 1) * page_size).limit(page_size)
@@ -90,9 +90,7 @@ async def list_scans(
 async def create_scan(
     scan_data: ScanCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Create and start a new scan."""
     scan = Scan(
@@ -112,6 +110,7 @@ async def create_scan(
     # Trigger async scan via Celery (optional - scan still created if Celery unavailable)
     try:
         from app.services.tasks import run_scan_task
+
         run_scan_task.delay(scan.id)
     except Exception:
         pass
@@ -146,9 +145,7 @@ async def get_scan(
 async def cancel_scan(
     scan_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Cancel a running scan."""
     result = await db.execute(
@@ -196,9 +193,7 @@ async def get_scan_results(
     if not scan:
         raise HTTPException(status_code=404, detail="Scan not found")
 
-    results = await db.execute(
-        select(ScanResult).where(ScanResult.scan_id == scan.id)
-    )
+    results = await db.execute(select(ScanResult).where(ScanResult.scan_id == scan.id))
 
     return {
         "scan_id": scan_id,

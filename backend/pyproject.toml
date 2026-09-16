@@ -56,6 +56,18 @@ ruff = "^0.1.0"
 black = "^23.11.0"
 pre-commit = "^3.6.0"
 
+[tool.ruff.lint]
+# E712 (comparison to True/False) is disabled: every occurrence in this
+# codebase is a SQLAlchemy declarative-column filter inside a `.where()`/
+# `and_()` clause (e.g. `Alert.auto_resolved == True`), not a plain Python
+# boolean check. SQLAlchemy overloads `Column.__eq__` to build a SQL
+# expression; rewriting these as `is True` (ruff's suggested fix) would
+# silently break the query, since `is` performs Python identity comparison
+# instead of producing SQL. This is the standard, documented SQLAlchemy
+# idiom, so the rule is inappropriate for this codebase rather than a case
+# to fix or suppress line-by-line.
+ignore = ["E712"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

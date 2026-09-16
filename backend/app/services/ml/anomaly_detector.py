@@ -1,6 +1,5 @@
 import numpy as np
-from typing import Any
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class AnomalyDetector:
@@ -56,7 +55,7 @@ class AnomalyDetector:
         sensitivity = threshold["sensitivity"]
 
         if std == 0:
-            z_score = 0 if value == mean else float('inf')
+            z_score = 0 if value == mean else float("inf")
         else:
             z_score = (value - mean) / std
 
@@ -84,48 +83,57 @@ class AnomalyDetector:
         # Check for sudden risk score changes
         risk_scores = [h.get("risk_score", 0) for h in asset_history]
         for i in range(1, len(risk_scores)):
-            change = risk_scores[i] - risk_scores[i-1]
+            change = risk_scores[i] - risk_scores[i - 1]
             if abs(change) > 20:
-                anomalies.append({
-                    "type": "risk_score_spike",
-                    "severity": "high" if change > 30 else "medium",
-                    "description": f"Risk score changed by {change:+.1f} points",
-                    "timestamp": asset_history[i].get("timestamp"),
-                    "details": {
-                        "previous": risk_scores[i-1],
-                        "current": risk_scores[i],
-                        "change": change,
-                    },
-                })
+                anomalies.append(
+                    {
+                        "type": "risk_score_spike",
+                        "severity": "high" if change > 30 else "medium",
+                        "description": f"Risk score changed by {change:+.1f} points",
+                        "timestamp": asset_history[i].get("timestamp"),
+                        "details": {
+                            "previous": risk_scores[i - 1],
+                            "current": risk_scores[i],
+                            "change": change,
+                        },
+                    }
+                )
 
         # Check for new open ports
         for i in range(1, len(asset_history)):
-            prev_ports = set(asset_history[i-1].get("open_ports", []))
+            prev_ports = set(asset_history[i - 1].get("open_ports", []))
             curr_ports = set(asset_history[i].get("open_ports", []))
             new_ports = curr_ports - prev_ports
             if new_ports:
-                anomalies.append({
-                    "type": "new_exposure",
-                    "severity": "high",
-                    "description": f"New open ports detected: {', '.join(map(str, new_ports))}",
-                    "timestamp": asset_history[i].get("timestamp"),
-                    "details": {"new_ports": list(new_ports)},
-                })
+                anomalies.append(
+                    {
+                        "type": "new_exposure",
+                        "severity": "high",
+                        "description": f"New open ports detected: {', '.join(map(str, new_ports))}",
+                        "timestamp": asset_history[i].get("timestamp"),
+                        "details": {"new_ports": list(new_ports)},
+                    }
+                )
 
         # Check for technology changes
         for i in range(1, len(asset_history)):
-            prev_tech = set(asset_history[i-1].get("technologies", []))
+            prev_tech = set(asset_history[i - 1].get("technologies", []))
             curr_tech = set(asset_history[i].get("technologies", []))
             new_tech = curr_tech - prev_tech
             removed_tech = prev_tech - curr_tech
             if new_tech or removed_tech:
-                anomalies.append({
-                    "type": "technology_change",
-                    "severity": "low",
-                    "description": f"Technology stack changed: +{list(new_tech)} -{list(removed_tech)}",
-                    "timestamp": asset_history[i].get("timestamp"),
-                    "details": {"added": list(new_tech), "removed": list(removed_tech)},
-                })
+                anomalies.append(
+                    {
+                        "type": "technology_change",
+                        "severity": "low",
+                        "description": f"Technology stack changed: +{list(new_tech)} -{list(removed_tech)}",
+                        "timestamp": asset_history[i].get("timestamp"),
+                        "details": {
+                            "added": list(new_tech),
+                            "removed": list(removed_tech),
+                        },
+                    }
+                )
 
         return anomalies
 
@@ -143,12 +151,14 @@ class AnomalyDetector:
         latest = connections_per_hour[-1]
         result = self.detect_anomaly("connections_per_hour", latest)
         if result["is_anomaly"]:
-            anomalies.append({
-                "type": "traffic_anomaly",
-                "severity": "high" if result["deviation"] == "above" else "medium",
-                "description": f"Unusual traffic volume detected: {latest} connections (baseline: {result['baseline_mean']:.0f})",
-                "confidence": result["confidence"],
-            })
+            anomalies.append(
+                {
+                    "type": "traffic_anomaly",
+                    "severity": "high" if result["deviation"] == "above" else "medium",
+                    "description": f"Unusual traffic volume detected: {latest} connections (baseline: {result['baseline_mean']:.0f})",
+                    "confidence": result["confidence"],
+                }
+            )
 
         # Analyze geographic distribution
         geo_data = {}
@@ -165,11 +175,13 @@ class AnomalyDetector:
 
             new_countries = latest_countries - all_countries
             if new_countries:
-                anomalies.append({
-                    "type": "geo_anomaly",
-                    "severity": "medium",
-                    "description": f"New geographic sources: {', '.join(new_countries)}",
-                })
+                anomalies.append(
+                    {
+                        "type": "geo_anomaly",
+                        "severity": "medium",
+                        "description": f"New geographic sources: {', '.join(new_countries)}",
+                    }
+                )
 
         return anomalies
 
@@ -199,12 +211,20 @@ class AnomalyDetector:
             if trend > 0:
                 current = values[-1]
                 remaining = 100 - current
-                hours_to_threshold = remaining / (trend * 60) if trend > 0 else float('inf')
+                hours_to_threshold = (
+                    remaining / (trend * 60) if trend > 0 else float("inf")
+                )
                 predictions[name] = {
                     "current": round(current, 1),
                     "trend": "increasing",
-                    "hours_to_100": round(hours_to_threshold, 1) if hours_to_threshold < 168 else None,
-                    "risk": "high" if current > 80 or hours_to_threshold < 24 else "medium" if current > 60 else "low",
+                    "hours_to_100": round(hours_to_threshold, 1)
+                    if hours_to_threshold < 168
+                    else None,
+                    "risk": "high"
+                    if current > 80 or hours_to_threshold < 24
+                    else "medium"
+                    if current > 60
+                    else "low",
                 }
             else:
                 predictions[name] = {
@@ -225,9 +245,15 @@ class AnomalyDetector:
         for name, pred in predictions.items():
             if pred.get("risk") == "high":
                 if name == "cpu":
-                    recs.append("CPU usage trending high - consider scaling up or optimizing workloads")
+                    recs.append(
+                        "CPU usage trending high - consider scaling up or optimizing workloads"
+                    )
                 elif name == "memory":
-                    recs.append("Memory usage trending high - check for memory leaks or increase allocation")
+                    recs.append(
+                        "Memory usage trending high - check for memory leaks or increase allocation"
+                    )
                 elif name == "disk":
-                    recs.append("Disk usage trending high - clean up logs and old data or expand storage")
+                    recs.append(
+                        "Disk usage trending high - clean up logs and old data or expand storage"
+                    )
         return recs

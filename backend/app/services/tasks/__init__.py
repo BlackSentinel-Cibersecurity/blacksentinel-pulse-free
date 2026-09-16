@@ -37,13 +37,19 @@ celery_app.conf.update(
 def run_scan_task(self, scan_id: int):
     """Execute a scan asynchronously."""
     import asyncio
-    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+    from sqlalchemy.ext.asyncio import (
+        create_async_engine,
+        async_sessionmaker,
+        AsyncSession,
+    )
     from sqlalchemy import select
     from app.models.scan import Scan, ScanStatus
 
     async def _run():
         engine = create_async_engine(settings.DATABASE_URL)
-        async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        async_session = async_sessionmaker(
+            engine, class_=AsyncSession, expire_on_commit=False
+        )
 
         async with async_session() as db:
             result = await db.execute(select(Scan).where(Scan.id == scan_id))
@@ -58,7 +64,9 @@ def run_scan_task(self, scan_id: int):
 
             try:
                 from app.services.discovery.domain_scanner import DomainDiscoveryEngine
-                from app.services.discovery.network_scanner import NetworkDiscoveryEngine
+                from app.services.discovery.network_scanner import (
+                    NetworkDiscoveryEngine,
+                )
                 from app.services.discovery.cloud_scanner import CloudDiscoveryEngine
 
                 engine_map = {
@@ -68,7 +76,9 @@ def run_scan_task(self, scan_id: int):
                     "cloud_scan": CloudDiscoveryEngine,
                 }
 
-                scan_engine_class = engine_map.get(scan.scan_type.value, DomainDiscoveryEngine)
+                scan_engine_class = engine_map.get(
+                    scan.scan_type.value, DomainDiscoveryEngine
+                )
                 scan_engine = scan_engine_class()
 
                 for target in scan.targets:
@@ -84,7 +94,9 @@ def run_scan_task(self, scan_id: int):
 
             scan.completed_at = datetime.utcnow()
             if scan.started_at:
-                scan.duration_seconds = int((scan.completed_at - scan.started_at).total_seconds())
+                scan.duration_seconds = int(
+                    (scan.completed_at - scan.started_at).total_seconds()
+                )
             await db.commit()
 
         await engine.dispose()
@@ -126,29 +138,33 @@ def run_discovery_task(
         try:
             await cache.set(
                 f"discovery:{discovery_id}:status",
-                orjson.dumps({
-                    "discovery_id": discovery_id,
-                    "status": "running",
-                    "progress": 10,
-                    "assets_found": 0,
-                    "started_at": datetime.utcnow().isoformat(),
-                    "current_phase": "Initializing discovery engine",
-                }).decode(),
+                orjson.dumps(
+                    {
+                        "discovery_id": discovery_id,
+                        "status": "running",
+                        "progress": 10,
+                        "assets_found": 0,
+                        "started_at": datetime.utcnow().isoformat(),
+                        "current_phase": "Initializing discovery engine",
+                    }
+                ).decode(),
             )
 
             result = await engine.run(target, **options)
 
             await cache.set(
                 f"discovery:{discovery_id}:status",
-                orjson.dumps({
-                    "discovery_id": discovery_id,
-                    "status": "completed",
-                    "progress": 100,
-                    "assets_found": result.get("assets_found", 0),
-                    "started_at": datetime.utcnow().isoformat(),
-                    "completed_at": datetime.utcnow().isoformat(),
-                    "current_phase": "Discovery complete",
-                }).decode(),
+                orjson.dumps(
+                    {
+                        "discovery_id": discovery_id,
+                        "status": "completed",
+                        "progress": 100,
+                        "assets_found": result.get("assets_found", 0),
+                        "started_at": datetime.utcnow().isoformat(),
+                        "completed_at": datetime.utcnow().isoformat(),
+                        "current_phase": "Discovery complete",
+                    }
+                ).decode(),
             )
 
             await cache.set(
@@ -160,11 +176,13 @@ def run_discovery_task(
         except Exception as e:
             await cache.set(
                 f"discovery:{discovery_id}:status",
-                orjson.dumps({
-                    "discovery_id": discovery_id,
-                    "status": "failed",
-                    "error": str(e),
-                }).decode(),
+                orjson.dumps(
+                    {
+                        "discovery_id": discovery_id,
+                        "status": "failed",
+                        "error": str(e),
+                    }
+                ).decode(),
             )
 
     asyncio.run(_run())
@@ -177,6 +195,7 @@ def sync_integration_task(self, org_id: int, provider: str):
 
     async def _run():
         from app.services.integration_manager import IntegrationManager
+
         manager = IntegrationManager()
         await manager.sync(org_id=org_id, provider=provider)
 
@@ -189,15 +208,23 @@ def scheduled_discovery():
     import asyncio
 
     async def _run():
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            create_async_engine,
+            async_sessionmaker,
+            AsyncSession,
+        )
         from sqlalchemy import select
         from app.models.organization import Organization
 
         engine = create_async_engine(settings.DATABASE_URL)
-        async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        async_session = async_sessionmaker(
+            engine, class_=AsyncSession, expire_on_commit=False
+        )
 
         async with async_session() as db:
-            result = await db.execute(select(Organization).where(Organization.is_active == True))
+            result = await db.execute(
+                select(Organization).where(Organization.is_active == True)
+            )
             orgs = result.scalars().all()
 
             for org in orgs:
@@ -214,13 +241,19 @@ def update_risk_scores():
     import asyncio
 
     async def _run():
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            create_async_engine,
+            async_sessionmaker,
+            AsyncSession,
+        )
         from sqlalchemy import select
         from app.models.asset import Asset
         from app.services.ml.risk_engine import RiskScoringEngine
 
         engine = create_async_engine(settings.DATABASE_URL)
-        async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        async_session = async_sessionmaker(
+            engine, class_=AsyncSession, expire_on_commit=False
+        )
         risk_engine = RiskScoringEngine()
 
         async with async_session() as db:

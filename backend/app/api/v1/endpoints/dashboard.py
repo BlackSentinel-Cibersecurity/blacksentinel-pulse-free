@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
@@ -8,10 +7,10 @@ from sqlalchemy import select, func, and_
 
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.models.asset import Asset, AssetType, AssetStatus
-from app.models.vulnerability import Vulnerability, Severity
-from app.models.scan import Scan, ScanStatus
-from app.models.alert import Alert, AlertSeverity, AlertStatus
+from app.models.asset import Asset
+from app.models.vulnerability import Vulnerability
+from app.models.scan import Scan
+from app.models.alert import Alert, AlertStatus
 from app.models.user import User
 
 router = APIRouter()
@@ -80,68 +79,80 @@ async def get_dashboard(
     now = datetime.utcnow()
 
     # Overview stats
-    total_assets = (await db.execute(
-        select(func.count()).where(Asset.organization_id == org_id)
-    )).scalar()
+    total_assets = (
+        await db.execute(select(func.count()).where(Asset.organization_id == org_id))
+    ).scalar()
 
-    total_vulns = (await db.execute(
-        select(func.count()).select_from(
-            select(Vulnerability.id)
-            .join(Asset, Vulnerability.asset_id == Asset.id)
-            .where(Asset.organization_id == org_id)
-            .subquery()
-        )
-    )).scalar()
-
-    total_scans = (await db.execute(
-        select(func.count()).where(Scan.organization_id == org_id)
-    )).scalar()
-
-    open_alerts = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Alert.organization_id == org_id,
-                Alert.status == AlertStatus.OPEN,
+    total_vulns = (
+        await db.execute(
+            select(func.count()).select_from(
+                select(Vulnerability.id)
+                .join(Asset, Vulnerability.asset_id == Asset.id)
+                .where(Asset.organization_id == org_id)
+                .subquery()
             )
         )
-    )).scalar()
+    ).scalar()
 
-    avg_risk = (await db.execute(
-        select(func.avg(Asset.risk_score)).where(Asset.organization_id == org_id)
-    )).scalar() or 0.0
+    total_scans = (
+        await db.execute(select(func.count()).where(Scan.organization_id == org_id))
+    ).scalar()
 
-    critical_assets = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Asset.organization_id == org_id,
-                Asset.risk_score >= 90,
-            )
-        )
-    )).scalar()
-
-    assets_today = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Asset.organization_id == org_id,
-                Asset.created_at >= now - timedelta(hours=24),
-            )
-        )
-    )).scalar()
-
-    vulns_resolved = (await db.execute(
-        select(func.count()).select_from(
-            select(Vulnerability.id)
-            .join(Asset, Vulnerability.asset_id == Asset.id)
-            .where(
+    open_alerts = (
+        await db.execute(
+            select(func.count()).where(
                 and_(
-                    Asset.organization_id == org_id,
-                    Vulnerability.status == "remediated",
-                    Vulnerability.remediated_at >= now - timedelta(hours=24),
+                    Alert.organization_id == org_id,
+                    Alert.status == AlertStatus.OPEN,
                 )
             )
-            .subquery()
         )
-    )).scalar()
+    ).scalar()
+
+    avg_risk = (
+        await db.execute(
+            select(func.avg(Asset.risk_score)).where(Asset.organization_id == org_id)
+        )
+    ).scalar() or 0.0
+
+    critical_assets = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Asset.organization_id == org_id,
+                    Asset.risk_score >= 90,
+                )
+            )
+        )
+    ).scalar()
+
+    assets_today = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Asset.organization_id == org_id,
+                    Asset.created_at >= now - timedelta(hours=24),
+                )
+            )
+        )
+    ).scalar()
+
+    vulns_resolved = (
+        await db.execute(
+            select(func.count()).select_from(
+                select(Vulnerability.id)
+                .join(Asset, Vulnerability.asset_id == Asset.id)
+                .where(
+                    and_(
+                        Asset.organization_id == org_id,
+                        Vulnerability.status == "remediated",
+                        Vulnerability.remediated_at >= now - timedelta(hours=24),
+                    )
+                )
+                .subquery()
+            )
+        )
+    ).scalar()
 
     overview = OverviewStats(
         total_assets=total_assets,
@@ -155,9 +166,12 @@ async def get_dashboard(
     )
 
     # Risk distribution
-    risk_dist_query = select(
-        Vulnerability.severity, func.count()
-    ).join(Asset).where(Asset.organization_id == org_id).group_by(Vulnerability.severity)
+    risk_dist_query = (
+        select(Vulnerability.severity, func.count())
+        .join(Asset)
+        .where(Asset.organization_id == org_id)
+        .group_by(Vulnerability.severity)
+    )
     risk_result = await db.execute(risk_dist_query)
     risk_counts = {str(row[0]): row[1] for row in risk_result.all()}
     risk_distribution = RiskDistribution(
@@ -175,47 +189,55 @@ async def get_dashboard(
         day_start = date.replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
 
-        day_assets = (await db.execute(
-            select(func.count()).where(
-                and_(
-                    Asset.organization_id == org_id,
-                    Asset.created_at >= day_start,
-                    Asset.created_at < day_end,
-                )
-            )
-        )).scalar()
-
-        day_vulns = (await db.execute(
-            select(func.count()).select_from(
-                select(Vulnerability.id)
-                .join(Asset, Vulnerability.asset_id == Asset.id)
-                .where(
+        day_assets = (
+            await db.execute(
+                select(func.count()).where(
                     and_(
                         Asset.organization_id == org_id,
-                        Vulnerability.discovered_at >= day_start,
-                        Vulnerability.discovered_at < day_end,
+                        Asset.created_at >= day_start,
+                        Asset.created_at < day_end,
                     )
                 )
-                .subquery()
             )
-        )).scalar()
+        ).scalar()
 
-        day_alerts = (await db.execute(
-            select(func.count()).where(
-                and_(
-                    Alert.organization_id == org_id,
-                    Alert.created_at >= day_start,
-                    Alert.created_at < day_end,
+        day_vulns = (
+            await db.execute(
+                select(func.count()).select_from(
+                    select(Vulnerability.id)
+                    .join(Asset, Vulnerability.asset_id == Asset.id)
+                    .where(
+                        and_(
+                            Asset.organization_id == org_id,
+                            Vulnerability.discovered_at >= day_start,
+                            Vulnerability.discovered_at < day_end,
+                        )
+                    )
+                    .subquery()
                 )
             )
-        )).scalar()
+        ).scalar()
 
-        timeline.append(TimelinePoint(
-            timestamp=date.strftime("%Y-%m-%d"),
-            assets=day_assets,
-            vulnerabilities=day_vulns,
-            alerts=day_alerts,
-        ))
+        day_alerts = (
+            await db.execute(
+                select(func.count()).where(
+                    and_(
+                        Alert.organization_id == org_id,
+                        Alert.created_at >= day_start,
+                        Alert.created_at < day_end,
+                    )
+                )
+            )
+        ).scalar()
+
+        timeline.append(
+            TimelinePoint(
+                timestamp=date.strftime("%Y-%m-%d"),
+                assets=day_assets,
+                vulnerabilities=day_vulns,
+                alerts=day_alerts,
+            )
+        )
 
     # Top risky assets
     risky_query = (
@@ -229,22 +251,26 @@ async def get_dashboard(
 
     top_risky = []
     for a in risky_assets:
-        vuln_count = (await db.execute(
-            select(func.count()).where(
-                and_(
-                    Vulnerability.asset_id == a.id,
-                    Vulnerability.status != "remediated",
+        vuln_count = (
+            await db.execute(
+                select(func.count()).where(
+                    and_(
+                        Vulnerability.asset_id == a.id,
+                        Vulnerability.status != "remediated",
+                    )
                 )
             )
-        )).scalar()
-        top_risky.append(TopRiskyAsset(
-            id=a.id,
-            name=a.name,
-            asset_type=str(a.asset_type.value),
-            risk_score=a.risk_score,
-            vulnerability_count=vuln_count,
-            status=str(a.status.value),
-        ))
+        ).scalar()
+        top_risky.append(
+            TopRiskyAsset(
+                id=a.id,
+                name=a.name,
+                asset_type=str(a.asset_type.value),
+                risk_score=a.risk_score,
+                vulnerability_count=vuln_count,
+                status=str(a.status.value),
+            )
+        )
 
     # Discovery trends
     trends = []
@@ -253,21 +279,25 @@ async def get_dashboard(
         date = now - timedelta(days=29 - i)
         day_start = date.replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
-        new = (await db.execute(
-            select(func.count()).where(
-                and_(
-                    Asset.organization_id == org_id,
-                    Asset.created_at >= day_start,
-                    Asset.created_at < day_end,
+        new = (
+            await db.execute(
+                select(func.count()).where(
+                    and_(
+                        Asset.organization_id == org_id,
+                        Asset.created_at >= day_start,
+                        Asset.created_at < day_end,
+                    )
                 )
             )
-        )).scalar()
+        ).scalar()
         cumulative += new
-        trends.append(DiscoveryTrend(
-            date=date.strftime("%Y-%m-%d"),
-            new_assets=new,
-            total_assets=cumulative,
-        ))
+        trends.append(
+            DiscoveryTrend(
+                date=date.strftime("%Y-%m-%d"),
+                new_assets=new,
+                total_assets=cumulative,
+            )
+        )
 
     # Recent alerts
     recent_alerts_q = (
@@ -289,16 +319,20 @@ async def get_dashboard(
     ]
 
     # Scan status
-    scan_status_q = select(Scan.status, func.count()).where(
-        Scan.organization_id == org_id
-    ).group_by(Scan.status)
+    scan_status_q = (
+        select(Scan.status, func.count())
+        .where(Scan.organization_id == org_id)
+        .group_by(Scan.status)
+    )
     scan_result = await db.execute(scan_status_q)
     scan_status = {str(row[0].value): row[1] for row in scan_result.all()}
 
     # Asset type distribution
-    type_q = select(Asset.asset_type, func.count()).where(
-        Asset.organization_id == org_id
-    ).group_by(Asset.asset_type)
+    type_q = (
+        select(Asset.asset_type, func.count())
+        .where(Asset.organization_id == org_id)
+        .group_by(Asset.asset_type)
+    )
     type_result = await db.execute(type_q)
     asset_type_dist = {str(row[0].value): row[1] for row in type_result.all()}
 
@@ -327,6 +361,10 @@ async def get_realtime_data(
     cached = await cache.get(key)
     if cached:
         import orjson
+
         return orjson.loads(cached)
 
-    return {"status": "no_data", "message": "Real-time data will appear after first scan"}
+    return {
+        "status": "no_data",
+        "message": "Real-time data will appear after first scan",
+    }

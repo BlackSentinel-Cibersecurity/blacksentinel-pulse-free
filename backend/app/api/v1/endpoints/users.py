@@ -1,13 +1,13 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 
 from app.core.database import get_db
-from app.core.deps import get_current_user, RoleChecker
+from app.core.deps import RoleChecker
 from app.core.security import hash_password
 from app.models.user import User, UserRole
 
@@ -69,9 +69,7 @@ async def create_user(
     current_user: User = Depends(RoleChecker(["super_admin", "admin"])),
 ):
     """Create a new user. Auto-generates username, BlackID, and temporary password."""
-    existing = await db.execute(
-        select(User).where(User.email == user_data.email)
-    )
+    existing = await db.execute(select(User).where(User.email == user_data.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -79,9 +77,7 @@ async def create_user(
     black_id = User.generate_black_id(user_data.first_name, user_data.last_name)
 
     while True:
-        existing_id = await db.execute(
-            select(User).where(User.black_id == black_id)
-        )
+        existing_id = await db.execute(select(User).where(User.black_id == black_id))
         if not existing_id.scalar_one_or_none():
             break
         black_id = User.generate_black_id(user_data.first_name, user_data.last_name)

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -67,7 +65,7 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
 
     def __call__(self, user: User = Depends(get_current_user)) -> User:
-        user_role = user.role.value if hasattr(user.role, 'value') else user.role
+        user_role = user.role.value if hasattr(user.role, "value") else user.role
         if user_role not in self.allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

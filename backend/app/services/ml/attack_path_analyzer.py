@@ -1,4 +1,3 @@
-from typing import Any
 from app.core.database import Neo4jDriver
 
 
@@ -69,15 +68,19 @@ class AttackPathAnalyzer:
                         }
                     steps.append(step)
 
-                paths.append({
-                    "path_id": f"path_{len(paths)}",
-                    "steps": steps,
-                    "total_risk": record["path_risk"],
-                    "length": record["path_length"],
-                    "complexity": self._calculate_complexity(record["path_risk"], record["path_length"]),
-                    "entry_point": path_nodes[0].get("name"),
-                    "target": path_nodes[-1].get("name"),
-                })
+                paths.append(
+                    {
+                        "path_id": f"path_{len(paths)}",
+                        "steps": steps,
+                        "total_risk": record["path_risk"],
+                        "length": record["path_length"],
+                        "complexity": self._calculate_complexity(
+                            record["path_risk"], record["path_length"]
+                        ),
+                        "entry_point": path_nodes[0].get("name"),
+                        "target": path_nodes[-1].get("name"),
+                    }
+                )
 
         return paths
 
@@ -100,14 +103,17 @@ class AttackPathAnalyzer:
             result = await session.run(query, org_id=org_id)
             chokepoints = []
             async for record in result:
-                chokepoints.append({
-                    "asset_id": record["id"],
-                    "name": record["name"],
-                    "type": record["type"],
-                    "risk_score": record["risk_score"],
-                    "paths_through": record["path_count"],
-                    "importance_score": record["path_count"] * (record["risk_score"] or 0),
-                })
+                chokepoints.append(
+                    {
+                        "asset_id": record["id"],
+                        "name": record["name"],
+                        "type": record["type"],
+                        "risk_score": record["risk_score"],
+                        "paths_through": record["path_count"],
+                        "importance_score": record["path_count"]
+                        * (record["risk_score"] or 0),
+                    }
+                )
 
         return chokepoints
 
@@ -139,18 +145,22 @@ class AttackPathAnalyzer:
 
             affected = []
             async for record in result:
-                affected.append({
-                    "id": record["id"],
-                    "name": record["name"],
-                    "type": record["type"],
-                    "risk_score": record["risk_score"],
-                    "criticality": record["criticality"],
-                })
+                affected.append(
+                    {
+                        "id": record["id"],
+                        "name": record["name"],
+                        "type": record["type"],
+                        "risk_score": record["risk_score"],
+                        "criticality": record["criticality"],
+                    }
+                )
 
         # Calculate blast radius score
         total_risk = sum(a.get("risk_score", 0) for a in affected)
         critical_count = sum(1 for a in affected if a.get("criticality") == "critical")
-        blast_score = min(100, len(affected) * 5 + critical_count * 20 + total_risk / 10)
+        blast_score = min(
+            100, len(affected) * 5 + critical_count * 20 + total_risk / 10
+        )
 
         return {
             "source_asset": asset_id,
@@ -158,7 +168,13 @@ class AttackPathAnalyzer:
             "affected_count": len(affected),
             "critical_affected": critical_count,
             "affected_assets": affected,
-            "severity": "critical" if blast_score > 80 else "high" if blast_score > 60 else "medium" if blast_score > 40 else "low",
+            "severity": "critical"
+            if blast_score > 80
+            else "high"
+            if blast_score > 60
+            else "medium"
+            if blast_score > 40
+            else "low",
         }
 
     async def suggest_mitigations(self, attack_path: dict) -> list[dict]:
@@ -172,33 +188,43 @@ class AttackPathAnalyzer:
             relationship = step.get("relationship", {}).get("type", "")
 
             if asset_type == "web_application" and risk_score > 60:
-                mitigations.append({
-                    "step": i,
-                    "asset": step.get("name"),
-                    "mitigation": "Implement WAF and review application security",
-                    "priority": "high",
-                    "effort": "medium",
-                })
+                mitigations.append(
+                    {
+                        "step": i,
+                        "asset": step.get("name"),
+                        "mitigation": "Implement WAF and review application security",
+                        "priority": "high",
+                        "effort": "medium",
+                    }
+                )
 
             if relationship == "POINTS_TO" and risk_score > 50:
-                mitigations.append({
-                    "step": i,
-                    "asset": step.get("name"),
-                    "mitigation": "Review and restrict network connectivity",
-                    "priority": "medium",
-                    "effort": "low",
-                })
+                mitigations.append(
+                    {
+                        "step": i,
+                        "asset": step.get("name"),
+                        "mitigation": "Review and restrict network connectivity",
+                        "priority": "medium",
+                        "effort": "low",
+                    }
+                )
 
-            if asset_type == "cloud_resource" and step.get("metadata", {}).get("public_ip"):
-                mitigations.append({
-                    "step": i,
-                    "asset": step.get("name"),
-                    "mitigation": "Remove public IP or restrict access via security groups",
-                    "priority": "high",
-                    "effort": "low",
-                })
+            if asset_type == "cloud_resource" and step.get("metadata", {}).get(
+                "public_ip"
+            ):
+                mitigations.append(
+                    {
+                        "step": i,
+                        "asset": step.get("name"),
+                        "mitigation": "Remove public IP or restrict access via security groups",
+                        "priority": "high",
+                        "effort": "low",
+                    }
+                )
 
-        return sorted(mitigations, key=lambda x: {"high": 0, "medium": 1, "low": 2}[x["priority"]])
+        return sorted(
+            mitigations, key=lambda x: {"high": 0, "medium": 1, "low": 2}[x["priority"]]
+        )
 
     def _calculate_complexity(self, total_risk: float, path_length: int) -> str:
         """Calculate attack complexity from path metrics."""

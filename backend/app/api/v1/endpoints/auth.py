@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -143,13 +141,14 @@ async def login(
     record_successful_login(user.id)
 
     from datetime import datetime
+
     user.last_login = datetime.utcnow()
     await db.commit()
 
     access_token = create_access_token(subject=user.id)
     refresh_token = create_refresh_token(subject=user.id)
 
-    user_role = user.role.value if hasattr(user.role, 'value') else user.role
+    user_role = user.role.value if hasattr(user.role, "value") else user.role
 
     return TokenResponse(
         access_token=access_token,
@@ -197,7 +196,7 @@ async def refresh_token(
     access_token = create_access_token(subject=user.id)
     new_refresh_token = create_refresh_token(subject=user.id)
 
-    user_role = user.role.value if hasattr(user.role, 'value') else user.role
+    user_role = user.role.value if hasattr(user.role, "value") else user.role
 
     return TokenResponse(
         access_token=access_token,
@@ -231,12 +230,16 @@ async def get_current_user_info(
         "first_name": current_user.first_name,
         "last_name": current_user.last_name,
         "full_name": current_user.full_name,
-        "role": current_user.role.value if hasattr(current_user.role, 'value') else current_user.role,
+        "role": current_user.role.value
+        if hasattr(current_user.role, "value")
+        else current_user.role,
         "is_active": current_user.is_active,
         "organization_id": current_user.organization_id,
         "force_password_change": current_user.force_password_change,
         "totp_enabled": current_user.totp_enabled,
-        "created_at": current_user.created_at.isoformat() if current_user.created_at else None,
+        "created_at": current_user.created_at.isoformat()
+        if current_user.created_at
+        else None,
     }
 
 

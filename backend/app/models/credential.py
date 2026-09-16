@@ -1,7 +1,14 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, ForeignKey, Text, JSON, Float
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    JSON,
+    Float,
 )
 from sqlalchemy.orm import relationship
 
@@ -10,10 +17,13 @@ from app.core.database import Base
 
 class CredentialExposure(Base):
     """Exposed or leaked credentials found during discovery."""
+
     __tablename__ = "credential_exposures"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    credential_type = Column(String(50), nullable=False)  # password, api_key, token, private_key, etc.
+    credential_type = Column(
+        String(50), nullable=False
+    )  # password, api_key, token, private_key, etc.
     username = Column(String(255))
     email = Column(String(255))
     service = Column(String(255))
@@ -31,7 +41,9 @@ class CredentialExposure(Base):
     last_validated = Column(DateTime)
 
     # Evidence
-    evidence_hash = Column(String(255))  # Hash of the actual credential (never store plaintext)
+    evidence_hash = Column(
+        String(255)
+    )  # Hash of the actual credential (never store plaintext)
     evidence_metadata = Column(JSON, default=dict)
     redacted_preview = Column(String(255))  # Partially redacted for display
 

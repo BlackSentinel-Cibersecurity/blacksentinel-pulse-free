@@ -2,7 +2,16 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, Text, JSON, Float
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Text,
+    JSON,
+    Float,
 )
 from sqlalchemy.orm import relationship
 
@@ -27,6 +36,7 @@ class ThreatType(str, enum.Enum):
 
 class ThreatIntelligence(Base):
     """Threat intelligence data associated with assets."""
+
     __tablename__ = "threat_intelligence"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -71,6 +81,7 @@ class ThreatIntelligence(Base):
 
 class ThreatFeed(Base):
     """External threat intelligence feed configuration."""
+
     __tablename__ = "threat_feeds"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

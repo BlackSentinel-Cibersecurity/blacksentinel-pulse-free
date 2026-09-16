@@ -47,10 +47,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers[
+            "Strict-Transport-Security"
+        ] = "max-age=31536000; includeSubDomains"
         response.headers["Content-Security-Policy"] = "default-src 'self'"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers[
+            "Permissions-Policy"
+        ] = "camera=(), microphone=(), geolocation=()"
 
         return response
 
@@ -80,5 +84,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         response = await call_next(request)
         response.headers["X-RateLimit-Limit"] = str(self.max_requests)
-        response.headers["X-RateLimit-Remaining"] = str(max(0, self.max_requests - current))
+        response.headers["X-RateLimit-Remaining"] = str(
+            max(0, self.max_requests - current)
+        )
         return response
