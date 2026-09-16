@@ -3,6 +3,7 @@ name = "blacksentinel-pulse"
 version = "1.0.0"
 description = "BlackSentinel Pulse - AI Autonomous Attack Surface Management Platform"
 authors = ["BlackSentinel Team"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.11"
