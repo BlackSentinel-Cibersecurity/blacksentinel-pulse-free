@@ -1,22 +1,46 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
-  FileText, Download, Shield, AlertTriangle, Globe, Activity, BarChart3
+  FileText, Shield, AlertTriangle, Globe, Activity, BarChart3
 } from 'lucide-react'
 import { reportsAPI } from '../services/api'
 
-const COLORS = ['#FF3B3B', '#FF6B2C', '#FFB020', '#34D399', '#60A5FA']
+interface RiskOverview {
+  average_risk_score?: number
+  open_alerts?: number
+  risk_level?: string
+}
+
+interface AssetOverview {
+  total?: number
+  scans_performed?: number
+}
+
+interface VulnerabilityOverview {
+  total?: number
+  critical?: number
+}
+
+interface ComplianceOverview {
+  status?: string
+}
+
+interface ExecutiveReport {
+  period?: string
+  executive_summary?: string
+  risk_overview?: RiskOverview
+  asset_overview?: AssetOverview
+  vulnerability_overview?: VulnerabilityOverview
+  recommendations?: string[]
+  compliance_overview?: ComplianceOverview
+}
 
 export default function ReportsPage() {
-  const [report, setReport] = useState<any>(null)
+  const [report, setReport] = useState<ExecutiveReport | null>(null)
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState(30)
 
-  useEffect(() => {
-    fetchReport()
-  }, [timeRange])
-
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     try {
       const response = await reportsAPI.getExecutive(timeRange)
       setReport(response.data)
@@ -25,7 +49,11 @@ export default function ReportsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeRange])
+
+  useEffect(() => {
+    fetchReport()
+  }, [fetchReport])
 
   if (loading) {
     return (

@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '../store/authStore'
 
 const API_BASE_URL = '/api/v1'
@@ -10,10 +10,12 @@ const api = axios.create({
   },
 })
 
-let isRefreshing = false
-let failedQueue: Array<{ resolve: (value: any) => void; reject: (reason?: any) => void }> = []
+type RetriableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean }
 
-const processQueue = (error: any, token: string | null = null) => {
+let isRefreshing = false
+let failedQueue: Array<{ resolve: (value: string | null) => void; reject: (reason?: unknown) => void }> = []
+
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error)
@@ -40,7 +42,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as any
+    const originalRequest = error.config as RetriableRequestConfig
 
     // Skip interceptor for login/register/refresh endpoints - let caller handle errors
     const url = originalRequest?.url || ''
@@ -123,10 +125,10 @@ export const healthAPI = {
 
 // Assets API
 export const assetsAPI = {
-  list: (params?: Record<string, any>) => api.get('/assets', { params }),
+  list: (params?: Record<string, string | number | boolean | undefined>) => api.get('/assets', { params }),
   get: (id: number) => api.get(`/assets/${id}`),
-  create: (data: any) => api.post('/assets', data),
-  update: (id: number, data: any) => api.put(`/assets/${id}`, data),
+  create: (data: Record<string, unknown>) => api.post('/assets', data),
+  update: (id: number, data: Record<string, unknown>) => api.put(`/assets/${id}`, data),
   delete: (id: number) => api.delete(`/assets/${id}`),
   getStats: () => api.get('/assets/stats'),
   getRelated: (id: number, depth?: number) =>
@@ -135,16 +137,16 @@ export const assetsAPI = {
 
 // Scans API
 export const scansAPI = {
-  list: (params?: Record<string, any>) => api.get('/scans', { params }),
+  list: (params?: Record<string, string | number | boolean | undefined>) => api.get('/scans', { params }),
   get: (id: string) => api.get(`/scans/${id}`),
-  create: (data: any) => api.post('/scans', data),
+  create: (data: Record<string, unknown>) => api.post('/scans', data),
   cancel: (id: string) => api.post(`/scans/${id}/cancel`),
   getResults: (id: string) => api.get(`/scans/${id}/results`),
 }
 
 // Vulnerabilities API
 export const vulnsAPI = {
-  list: (params?: Record<string, any>) => api.get('/vulnerabilities', { params }),
+  list: (params?: Record<string, string | number | boolean | undefined>) => api.get('/vulnerabilities', { params }),
   get: (id: number) => api.get(`/vulnerabilities/${id}`),
   getStats: () => api.get('/vulnerabilities/stats'),
   updateStatus: (id: number, status: string) =>
@@ -153,7 +155,7 @@ export const vulnsAPI = {
 
 // Alerts API
 export const alertsAPI = {
-  list: (params?: Record<string, any>) => api.get('/alerts', { params }),
+  list: (params?: Record<string, string | number | boolean | undefined>) => api.get('/alerts', { params }),
   get: (id: string) => api.get(`/alerts/${id}`),
   getStats: () => api.get('/alerts/stats'),
   acknowledge: (id: string) => api.put(`/alerts/${id}/acknowledge`),
@@ -170,7 +172,7 @@ export const dashboardAPI = {
 
 // Discovery API
 export const discoveryAPI = {
-  start: (data: any) => api.post('/discovery/start', data),
+  start: (data: Record<string, unknown>) => api.post('/discovery/start', data),
   getStatus: (id: string) => api.get(`/discovery/status/${id}`),
   getResults: (id: string) => api.get(`/discovery/results/${id}`),
   scanDomain: (domain: string, deep?: boolean) =>
@@ -206,7 +208,7 @@ export const usersAPI = {
   get: (id: number) => api.get(`/users/${id}`),
   create: (data: { email: string; first_name: string; last_name: string; role: string }) =>
     api.post('/users', data),
-  update: (id: number, data: any) => api.put(`/users/${id}`, data),
+  update: (id: number, data: Record<string, unknown>) => api.put(`/users/${id}`, data),
   delete: (id: number) => api.delete(`/users/${id}`),
 }
 

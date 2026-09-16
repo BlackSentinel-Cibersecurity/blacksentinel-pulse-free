@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Globe, Shield, AlertTriangle, Activity, TrendingUp, TrendingDown,
-  ArrowUpRight, ArrowDownRight, Radar, Eye, Zap, Clock, Server,
-  Database, Cloud, Lock, Wifi, GitBranch
+  Globe, Shield, AlertTriangle, Activity,
+  ArrowUpRight, ArrowDownRight, Zap
 } from 'lucide-react'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -20,16 +19,66 @@ const COLORS = {
   info: '#60A5FA',
 }
 
+interface DashboardOverview {
+  total_assets?: number
+  assets_discovered_today?: number
+  total_vulnerabilities?: number
+  vulnerabilities_resolved_today?: number
+  open_alerts?: number
+  critical_assets?: number
+  risk_score_avg?: number
+}
+
+interface RiskDistribution {
+  critical?: number
+  high?: number
+  medium?: number
+  low?: number
+  info?: number
+}
+
+interface TimelinePoint {
+  timestamp: string
+  assets?: number
+  vulnerabilities?: number
+}
+
+interface TopRiskyAsset {
+  id: number
+  name: string
+  type?: string
+  risk_score: number
+  vulnerability_count?: number
+}
+
+interface DiscoveryTrendPoint {
+  date: string
+  new_assets?: number
+}
+
+interface RecentAlert {
+  id: string
+  title: string
+  severity: string
+  status: string
+  created_at?: string
+}
+
+interface DashboardData {
+  overview?: DashboardOverview
+  risk_distribution?: RiskDistribution
+  timeline?: TimelinePoint[]
+  top_risky_assets?: TopRiskyAsset[]
+  discovery_trends?: DiscoveryTrendPoint[]
+  recent_alerts?: RecentAlert[]
+}
+
 export default function DashboardPage() {
-  const [data, setData] = useState<any>(null)
+  const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState(30)
 
-  useEffect(() => {
-    fetchData()
-  }, [timeRange])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const response = await dashboardAPI.getData(timeRange)
       setData(response.data)
@@ -38,7 +87,11 @@ export default function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeRange])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   if (loading) {
     return (
@@ -321,7 +374,7 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="space-y-3">
-            {topRisky.slice(0, 5).map((asset: any, index: number) => (
+            {topRisky.slice(0, 5).map((asset: TopRiskyAsset, index: number) => (
               <Link
                 key={asset.id}
                 to={`/assets/${asset.id}`}
@@ -421,7 +474,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {(data?.recent_alerts || []).slice(0, 5).map((alert: any) => (
+              {(data?.recent_alerts || []).slice(0, 5).map((alert: RecentAlert) => (
                 <tr key={alert.id} className="table-row">
                   <td className="py-3 px-4">
                     <span className="text-sm text-white">{alert.title}</span>
