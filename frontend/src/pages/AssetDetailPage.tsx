@@ -1,23 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  ArrowLeft, Globe, Shield, Activity, AlertTriangle, ExternalLink,
-  Copy, RefreshCw, Calendar, MapPin, Server, Lock, Wifi, Database
+  ArrowLeft, Globe, Shield, Activity, AlertTriangle,
+  RefreshCw
 } from 'lucide-react'
 import { assetsAPI } from '../services/api'
 
+interface Asset {
+  id: number
+  name: string
+  asset_type?: string
+  ip_address?: string
+  hostname?: string
+  risk_score: number
+  status?: string
+  criticality?: string
+  discovery_method?: string
+  created_at?: string
+  last_seen?: string
+  tags?: string[]
+  metadata?: Record<string, unknown>
+}
+
 export default function AssetDetailPage() {
   const { id } = useParams()
-  const [asset, setAsset] = useState<any>(null)
+  const [asset, setAsset] = useState<Asset | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
 
-  useEffect(() => {
-    fetchAsset()
-  }, [id])
-
-  const fetchAsset = async () => {
+  const fetchAsset = useCallback(async () => {
     try {
       const response = await assetsAPI.get(Number(id))
       setAsset(response.data)
@@ -26,7 +38,11 @@ export default function AssetDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    fetchAsset()
+  }, [fetchAsset])
 
   if (loading) {
     return (

@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Puzzle, CheckCircle, XCircle, Loader2, RefreshCw,
-  Settings, Zap, Link2, Cloud, Shield, Database, Server,
-  Lock, Globe, Key
+  CheckCircle, XCircle, Loader2, RefreshCw,
+  Settings, Zap, Link2, Cloud, Shield, Database
 } from 'lucide-react'
+import { AxiosError } from 'axios'
 import { integrationsAPI } from '../services/api'
 
 interface Integration {
@@ -190,8 +190,9 @@ export default function IntegrationsPage() {
       setConfiguring(null)
       setConfigData({})
       fetchIntegrations()
-    } catch (error: any) {
-      setConfigError(error.response?.data?.detail || 'Failed to configure integration')
+    } catch (error) {
+      const axiosError = error as AxiosError<{ detail?: string }>
+      setConfigError(axiosError.response?.data?.detail || 'Failed to configure integration')
     }
   }
 
@@ -228,7 +229,6 @@ export default function IntegrationsPage() {
                 {category.items.map((item) => {
                   const connection = getConnectionStatus(item.id)
                   const Icon = item.icon
-                  const isConfigOpen = configuring === item.id
 
                   return (
                     <motion.div

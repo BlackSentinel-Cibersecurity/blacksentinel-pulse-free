@@ -1,38 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Globe, Search, Filter, Download, RefreshCw, Plus,
-  ChevronDown, ExternalLink, Shield, Activity
+  Globe, Search, Filter, Download, Plus,
+  ExternalLink
 } from 'lucide-react'
 import { assetsAPI } from '../services/api'
 
-const ASSET_TYPE_ICONS: Record<string, any> = {
-  domain: Globe,
-  subdomain: Globe,
-  ip_address: Activity,
-  web_application: Globe,
-  cloud_resource: Globe,
-  database: Globe,
-  repository: Globe,
+interface AssetListItem {
+  id: number
+  name: string
+  asset_type?: string
+  ip_address?: string
+  hostname?: string
+  risk_score: number
+  status?: string
+  last_seen?: string
 }
 
 export default function AssetsPage() {
-  const [assets, setAssets] = useState<any[]>([])
+  const [assets, setAssets] = useState<AssetListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-  const [sortBy, setSortBy] = useState('risk_score')
+  const [sortBy] = useState('risk_score')
   const [sortOrder, setSortOrder] = useState('desc')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
 
-  useEffect(() => {
-    fetchAssets()
-  }, [search, typeFilter, statusFilter, sortBy, sortOrder, page])
-
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     try {
       const response = await assetsAPI.list({
         search,
@@ -50,7 +47,11 @@ export default function AssetsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, typeFilter, statusFilter, sortBy, sortOrder, page])
+
+  useEffect(() => {
+    fetchAssets()
+  }, [fetchAssets])
 
   const getRiskColor = (score: number) => {
     if (score >= 80) return 'text-red-400'

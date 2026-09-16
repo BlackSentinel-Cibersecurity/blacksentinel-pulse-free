@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
   Radar, Plus, Play, X, Clock, CheckCircle, XCircle,
-  Loader2, RefreshCw, Search, Filter
+  Loader2, RefreshCw, Filter
 } from 'lucide-react'
 import { scansAPI } from '../services/api'
 
@@ -50,13 +50,7 @@ export default function ScansPage() {
     targets: '',
   })
 
-  useEffect(() => {
-    fetchScans()
-    const interval = setInterval(fetchScans, 10000)
-    return () => clearInterval(interval)
-  }, [statusFilter])
-
-  const fetchScans = async () => {
+  const fetchScans = useCallback(async () => {
     try {
       const response = await scansAPI.list({ status: statusFilter || undefined })
       setScans(response.data.items || response.data)
@@ -65,7 +59,13 @@ export default function ScansPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [statusFilter])
+
+  useEffect(() => {
+    fetchScans()
+    const interval = setInterval(fetchScans, 10000)
+    return () => clearInterval(interval)
+  }, [fetchScans])
 
   const handleCreateScan = async () => {
     if (!newScan.name || !newScan.targets) return

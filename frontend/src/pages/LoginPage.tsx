@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, Shield, KeyRound } from 'lucide-react'
+import { AxiosError } from 'axios'
 import { useAuthStore } from '../store/authStore'
 import { authAPI } from '../services/api'
 
@@ -38,8 +39,8 @@ export default function LoginPage() {
 
       login(access_token, refresh_token, userData)
       navigate('/')
-    } catch (err: any) {
-      const detail = err.response?.data?.detail || 'Login failed.'
+    } catch (err) {
+      const detail = (err as AxiosError<{ detail?: string }>).response?.data?.detail || 'Login failed.'
       if (detail.includes('TOTP')) {
         setNeedsTOTP(true)
         setError('')
@@ -68,8 +69,8 @@ export default function LoginPage() {
         useAuthStore.getState().updateUser({ force_password_change: false })
       }
       navigate('/')
-    } catch (err: any) {
-      setPasswordError(err.response?.data?.detail || 'Failed to change password')
+    } catch (err) {
+      setPasswordError((err as AxiosError<{ detail?: string }>).response?.data?.detail || 'Failed to change password')
     }
   }
 

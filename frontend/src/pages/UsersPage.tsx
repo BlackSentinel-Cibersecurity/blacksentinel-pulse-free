@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Users, Plus, Shield, Trash2, Edit, Copy, CheckCircle,
-  Loader2, X, User, Mail, KeyRound
+  Plus, Trash2, Copy, CheckCircle,
+  Loader2, X
 } from 'lucide-react'
 import { usersAPI } from '../services/api'
 
@@ -92,23 +92,13 @@ const ROLE_COLORS: Record<string, string> = {
   auditor: 'bg-sentinel-gray-500/10 text-sentinel-gray-400 border-sentinel-gray-500/20',
 }
 
-const ROLE_GROUPS = [
-  { label: 'Leadership', roles: ['ciso', 'security_director', 'soc_manager', 'soc_supervisor', 'security_information_manager', 'security_compliance_manager'] },
-  { label: 'SOC Analysts', roles: ['soc_analyst_1', 'soc_analyst_2', 'soc_analyst_3', 'soc_analyst_4', 'soc_analyst_5'] },
-  { label: 'Security Analysts', roles: ['security_analyst_1', 'security_analyst_2', 'security_analyst_3', 'security_analyst_4', 'security_analyst_5'] },
-  { label: 'Specialized', roles: ['incident_responder', 'threat_hunter', 'forensics_analyst', 'vulnerability_analyst', 'penetration_tester'] },
-  { label: 'Engineering', roles: ['security_engineer', 'security_architect', 'cloud_security_engineer', 'devsecops_engineer'] },
-  { label: 'Infrastructure', roles: ['system_administrator', 'network_engineer', 'it_administrator'] },
-  { label: 'Access', roles: ['viewer', 'auditor'] },
-]
-
 export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [creating, setCreating] = useState(false)
   const [newUser, setNewUser] = useState({ email: '', first_name: '', last_name: '', role: 'soc_analyst_1' })
-  const [createdUser, setCreatedUser] = useState<any>(null)
+  const [createdUser, setCreatedUser] = useState<{ black_id: string; username: string; temp_password: string } | null>(null)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {

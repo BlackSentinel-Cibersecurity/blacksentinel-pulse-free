@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Bell, AlertTriangle, CheckCircle, XCircle, Clock,
-  Filter, RefreshCw, Eye, Shield, ExternalLink
+  Bell, AlertTriangle, CheckCircle, XCircle,
+  Filter, RefreshCw, Eye, Shield
 } from 'lucide-react'
 import { alertsAPI } from '../services/api'
 
@@ -36,21 +36,23 @@ const SEVERITY_BADGES: Record<string, string> = {
   info: 'badge-info',
 }
 
+interface AlertStats {
+  open?: number
+  acknowledged?: number
+  resolved?: number
+  critical?: number
+}
+
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([])
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<AlertStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [severityFilter, setSeverityFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [resolveNotes, setResolveNotes] = useState('')
 
-  useEffect(() => {
-    fetchAlerts()
-    fetchStats()
-  }, [severityFilter, statusFilter])
-
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     try {
       const response = await alertsAPI.list({
         severity: severityFilter || undefined,
@@ -62,16 +64,21 @@ export default function AlertsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [severityFilter, statusFilter])
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await alertsAPI.getStats()
       setStats(response.data)
     } catch (error) {
       console.error('Failed to fetch alert stats:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchAlerts()
+    fetchStats()
+  }, [fetchAlerts, fetchStats])
 
   const handleAcknowledge = async (id: string) => {
     try {

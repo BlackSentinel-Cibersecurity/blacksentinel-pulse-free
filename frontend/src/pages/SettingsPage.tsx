@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  User, Mail, Lock, Bell, Shield, Save, Loader2,
-  CheckCircle, AlertTriangle, Smartphone, QrCode
+  User, Mail, Lock, Bell, Save, Loader2,
+  CheckCircle, Smartphone
 } from 'lucide-react'
+import { AxiosError } from 'axios'
 import { useAuthStore } from '../store/authStore'
 import { authAPI } from '../services/api'
 
@@ -71,8 +72,8 @@ export default function SettingsPage() {
       setPassword({ current: '', new: '', confirm: '' })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch (error: any) {
-      setPasswordError(error.response?.data?.detail || 'Failed to change password')
+    } catch (error) {
+      setPasswordError((error as AxiosError<{ detail?: string }>).response?.data?.detail || 'Failed to change password')
     } finally {
       setChangingPassword(false)
     }

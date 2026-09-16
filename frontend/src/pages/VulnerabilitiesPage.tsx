@@ -1,13 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  Shield, Search, Filter, ExternalLink, AlertTriangle,
-  CheckCircle, Clock, Loader2, TrendingUp, TrendingDown
+  Shield, Search, AlertTriangle,
+  CheckCircle, Clock, LucideIcon
 } from 'lucide-react'
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts'
 import { vulnsAPI } from '../services/api'
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -18,16 +15,35 @@ const SEVERITY_COLORS: Record<string, string> = {
   info: 'badge-info',
 }
 
-const STATUS_ICONS: Record<string, any> = {
+const STATUS_ICONS: Record<string, LucideIcon> = {
   open: AlertTriangle,
   confirmed: CheckCircle,
   remediated: CheckCircle,
   false_positive: CheckCircle,
 }
 
+interface Vulnerability {
+  id: number
+  title?: string
+  external_id?: string
+  severity: string
+  status: string
+  asset_id?: number
+  asset_name?: string
+  cvss_score?: number
+}
+
+interface VulnStats {
+  critical?: number
+  high?: number
+  medium?: number
+  low?: number
+  info?: number
+}
+
 export default function VulnerabilitiesPage() {
-  const [vulns, setVulns] = useState<any[]>([])
-  const [stats, setStats] = useState<any>(null)
+  const [vulns, setVulns] = useState<Vulnerability[]>([])
+  const [stats, setStats] = useState<VulnStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [severityFilter, setSeverityFilter] = useState('')
@@ -35,12 +51,7 @@ export default function VulnerabilitiesPage() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
 
-  useEffect(() => {
-    fetchVulns()
-    fetchStats()
-  }, [search, severityFilter, statusFilter, page])
-
-  const fetchVulns = async () => {
+  const fetchVulns = useCallback(async () => {
     try {
       const response = await vulnsAPI.list({
         search,
@@ -56,16 +67,21 @@ export default function VulnerabilitiesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, severityFilter, statusFilter, page])
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await vulnsAPI.getStats()
       setStats(response.data)
     } catch (error) {
       console.error('Failed to fetch vulnerability stats:', error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchVulns()
+    fetchStats()
+  }, [fetchVulns, fetchStats])
 
   const handleStatusChange = async (id: number, status: string) => {
     try {

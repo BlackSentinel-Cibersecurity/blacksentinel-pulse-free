@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Globe, Radar, Shield, AlertTriangle,
-  Puzzle, FileText, Settings, LogOut, Search, Bell, Menu, X,
-  Activity, ChevronDown, User, Users
+  Puzzle, FileText, Settings, LogOut, Search, Bell, Menu,
+  User, Users
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 
