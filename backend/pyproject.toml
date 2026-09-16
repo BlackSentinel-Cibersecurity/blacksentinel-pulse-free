@@ -68,6 +68,11 @@ pre-commit = "^3.6.0"
 # to fix or suppress line-by-line.
 ignore = ["E712"]
 
+[tool.pytest.ini_options]
+# Lets `app.*` (and other backend-root modules) import cleanly when pytest
+# is run from the backend/ directory, without relying on a `tests/__init__.py`.
+pythonpath = ["."]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
