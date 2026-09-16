@@ -2,7 +2,15 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, Text, JSON
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Text,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 
@@ -20,6 +28,7 @@ class PolicyType(str, enum.Enum):
 
 class Policy(Base):
     """Security policy for automated response and compliance."""
+
     __tablename__ = "policies"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -57,7 +66,9 @@ class Policy(Base):
     # Relationships
     organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=False)
     organization = relationship("Organization", back_populates="policies")
-    rules = relationship("PolicyRule", back_populates="policy", cascade="all, delete-orphan")
+    rules = relationship(
+        "PolicyRule", back_populates="policy", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<Policy {self.name} ({self.policy_type})>"
@@ -65,6 +76,7 @@ class Policy(Base):
 
 class PolicyRule(Base):
     """Individual rule within a policy."""
+
     __tablename__ = "policy_rules"
 
     id = Column(Integer, primary_key=True, autoincrement=True)

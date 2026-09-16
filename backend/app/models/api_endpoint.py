@@ -1,7 +1,14 @@
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, ForeignKey, Text, JSON, Float
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    JSON,
+    Float,
 )
 from sqlalchemy.orm import relationship
 
@@ -10,10 +17,13 @@ from app.core.database import Base
 
 class APIEndpoint(Base):
     """Discovered API endpoint."""
+
     __tablename__ = "api_endpoints"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    method = Column(String(10), nullable=False)  # GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
+    method = Column(
+        String(10), nullable=False
+    )  # GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD
     path = Column(String(1000), nullable=False)
     full_url = Column(String(2000))
 

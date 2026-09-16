@@ -11,21 +11,84 @@ class DomainDiscoveryEngine(BaseDiscoveryEngine):
     """Discover subdomains, DNS records, and related assets for a domain."""
 
     COMMON_SUBDOMAINS = [
-        "www", "mail", "ftp", "smtp", "pop", "imap", "webmail",
-        "admin", "portal", "login", "sso", "auth", "api", "dev",
-        "staging", "test", "uat", "qa", "sandbox", "demo",
-        "app", "apps", "web", "cdn", "static", "media",
-        "blog", "docs", "wiki", "support", "help", "status",
-        "vpn", "remote", "gateway", "proxy", "load",
-        "db", "database", "mysql", "postgres", "mongo", "redis",
-        "k8s", "kubernetes", "docker", "registry",
-        "ci", "cd", "jenkins", "gitlab", "github",
-        "monitor", "grafana", "prometheus", "kibana",
-        "log", "logs", "elk", "elastic",
-        "backup", "bak", "old", "legacy",
-        "internal", "private", "corp", "corporate",
-        "shop", "store", "pay", "checkout", "billing",
-        "mx", "ns", "dns", "ldap", "kerberos",
+        "www",
+        "mail",
+        "ftp",
+        "smtp",
+        "pop",
+        "imap",
+        "webmail",
+        "admin",
+        "portal",
+        "login",
+        "sso",
+        "auth",
+        "api",
+        "dev",
+        "staging",
+        "test",
+        "uat",
+        "qa",
+        "sandbox",
+        "demo",
+        "app",
+        "apps",
+        "web",
+        "cdn",
+        "static",
+        "media",
+        "blog",
+        "docs",
+        "wiki",
+        "support",
+        "help",
+        "status",
+        "vpn",
+        "remote",
+        "gateway",
+        "proxy",
+        "load",
+        "db",
+        "database",
+        "mysql",
+        "postgres",
+        "mongo",
+        "redis",
+        "k8s",
+        "kubernetes",
+        "docker",
+        "registry",
+        "ci",
+        "cd",
+        "jenkins",
+        "gitlab",
+        "github",
+        "monitor",
+        "grafana",
+        "prometheus",
+        "kibana",
+        "log",
+        "logs",
+        "elk",
+        "elastic",
+        "backup",
+        "bak",
+        "old",
+        "legacy",
+        "internal",
+        "private",
+        "corp",
+        "corporate",
+        "shop",
+        "store",
+        "pay",
+        "checkout",
+        "billing",
+        "mx",
+        "ns",
+        "dns",
+        "ldap",
+        "kerberos",
     ]
 
     async def validate_target(self, target: str) -> bool:
@@ -66,26 +129,30 @@ class DomainDiscoveryEngine(BaseDiscoveryEngine):
 
         # Create assets for each discovered subdomain
         for subdomain in results["subdomains"]:
-            self.add_asset({
-                "name": subdomain,
-                "asset_type": "subdomain",
-                "parent_domain": target,
-                "discovery_method": "dns_enumeration",
-                "metadata": {
-                    "dns": dns_results.get(subdomain, {}),
-                },
-            })
+            self.add_asset(
+                {
+                    "name": subdomain,
+                    "asset_type": "subdomain",
+                    "parent_domain": target,
+                    "discovery_method": "dns_enumeration",
+                    "metadata": {
+                        "dns": dns_results.get(subdomain, {}),
+                    },
+                }
+            )
 
         # Add the main domain
-        self.add_asset({
-            "name": target,
-            "asset_type": "domain",
-            "discovery_method": "direct",
-            "metadata": {
-                "dns": dns_results.get(target, {}),
-                "subdomain_count": len(results["subdomains"]),
-            },
-        })
+        self.add_asset(
+            {
+                "name": target,
+                "asset_type": "domain",
+                "discovery_method": "direct",
+                "metadata": {
+                    "dns": dns_results.get(target, {}),
+                    "subdomain_count": len(results["subdomains"]),
+                },
+            }
+        )
 
         return results
 
@@ -108,15 +175,21 @@ class DomainDiscoveryEngine(BaseDiscoveryEngine):
 
                 # Add DNS records as assets
                 for rdata in answers:
-                    self.add_asset({
-                        "name": f"{record_type}:{domain}",
-                        "asset_type": "dns_record",
-                        "record_type": record_type,
-                        "value": str(rdata),
-                        "domain": domain,
-                        "discovery_method": "dns_enumeration",
-                    })
-            except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers):
+                    self.add_asset(
+                        {
+                            "name": f"{record_type}:{domain}",
+                            "asset_type": "dns_record",
+                            "record_type": record_type,
+                            "value": str(rdata),
+                            "domain": domain,
+                            "discovery_method": "dns_enumeration",
+                        }
+                    )
+            except (
+                dns.resolver.NXDOMAIN,
+                dns.resolver.NoAnswer,
+                dns.resolver.NoNameservers,
+            ):
                 continue
             except Exception:
                 continue
@@ -132,7 +205,7 @@ class DomainDiscoveryEngine(BaseDiscoveryEngine):
             try:
                 dns.resolver.resolve(fqdn, "A")
                 return fqdn
-            except:
+            except Exception:
                 return None
 
         # Run checks concurrently with rate limiting
@@ -162,25 +235,29 @@ class DomainDiscoveryEngine(BaseDiscoveryEngine):
         certificates = []
         try:
             async with httpx.AsyncClient(timeout=30) as client:
-                response = await client.get(
-                    f"https://crt.sh/?q=%.{domain}&output=json"
-                )
+                response = await client.get(f"https://crt.sh/?q=%.{domain}&output=json")
                 if response.status_code == 200:
                     data = response.json()
                     seen = set()
                     for entry in data:
                         name = entry.get("name_value", "")
                         subdomains = [s.strip() for s in name.split("\n") if s.strip()]
-                        new_subdomains = [s for s in subdomains if s not in seen and s.endswith(domain)]
+                        new_subdomains = [
+                            s
+                            for s in subdomains
+                            if s not in seen and s.endswith(domain)
+                        ]
                         seen.update(new_subdomains)
 
-                        certificates.append({
-                            "issuer": entry.get("issuer_name"),
-                            "not_before": entry.get("not_before"),
-                            "not_after": entry.get("not_after"),
-                            "subdomains": new_subdomains,
-                            "serial_number": entry.get("serial_number"),
-                        })
+                        certificates.append(
+                            {
+                                "issuer": entry.get("issuer_name"),
+                                "not_before": entry.get("not_before"),
+                                "not_after": entry.get("not_after"),
+                                "subdomains": new_subdomains,
+                                "serial_number": entry.get("serial_number"),
+                            }
+                        )
         except Exception as e:
             self.logger.warning("ct_lookup_failed", domain=domain, error=str(e))
 

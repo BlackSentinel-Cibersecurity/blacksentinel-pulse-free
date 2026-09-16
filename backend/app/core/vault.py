@@ -5,7 +5,6 @@ All API keys, tokens, and secrets are encrypted at rest using Fernet (AES-128-CB
 Keys are NEVER returned in API responses - only masked versions (e.g., "ak_****xyz").
 """
 import base64
-import hashlib
 import secrets
 import os
 from pathlib import Path
@@ -74,16 +73,27 @@ def mask_secret(value: str, visible_chars: int = 4) -> str:
     """Mask a secret for display. Shows first 2 and last `visible_chars` chars."""
     if not value or len(value) <= visible_chars + 2:
         return "****"
-    return f"{value[:2]}{'*' * (len(value) - visible_chars - 2)}{value[-visible_chars:]}"
+    return (
+        f"{value[:2]}{'*' * (len(value) - visible_chars - 2)}{value[-visible_chars:]}"
+    )
 
 
 def mask_dict_secrets(data: dict, secret_keys: list[str] | None = None) -> dict:
     """Return a copy of the dict with all secret values masked."""
     if secret_keys is None:
         secret_keys = [
-            "api_key", "secret_key", "access_key", "token", "password",
-            "secret", "private_key", "client_secret", "api_secret",
-            "access_token", "refresh_token", "secret_access_key",
+            "api_key",
+            "secret_key",
+            "access_key",
+            "token",
+            "password",
+            "secret",
+            "private_key",
+            "client_secret",
+            "api_secret",
+            "access_token",
+            "refresh_token",
+            "secret_access_key",
         ]
     masked = {}
     for k, v in data.items():
@@ -99,10 +109,21 @@ def mask_dict_secrets(data: dict, secret_keys: list[str] | None = None) -> dict:
 def encrypt_config(config: dict) -> dict:
     """Encrypt all secret values in a config dict before storing."""
     secret_keys = [
-        "api_key", "secret_key", "access_key", "token", "password",
-        "secret", "private_key", "client_secret", "api_secret",
-        "access_token", "refresh_token", "secret_access_key",
-        "aws_secret_access_key", "azure_client_secret", "github_token",
+        "api_key",
+        "secret_key",
+        "access_key",
+        "token",
+        "password",
+        "secret",
+        "private_key",
+        "client_secret",
+        "api_secret",
+        "access_token",
+        "refresh_token",
+        "secret_access_key",
+        "aws_secret_access_key",
+        "azure_client_secret",
+        "github_token",
     ]
     encrypted = {}
     for k, v in config.items():
@@ -118,10 +139,21 @@ def encrypt_config(config: dict) -> dict:
 def decrypt_config(config: dict) -> dict:
     """Decrypt all secret values in a config dict for use."""
     secret_keys = [
-        "api_key", "secret_key", "access_key", "token", "password",
-        "secret", "private_key", "client_secret", "api_secret",
-        "access_token", "refresh_token", "secret_access_key",
-        "aws_secret_access_key", "azure_client_secret", "github_token",
+        "api_key",
+        "secret_key",
+        "access_key",
+        "token",
+        "password",
+        "secret",
+        "private_key",
+        "client_secret",
+        "api_secret",
+        "access_token",
+        "refresh_token",
+        "secret_access_key",
+        "aws_secret_access_key",
+        "azure_client_secret",
+        "github_token",
     ]
     decrypted = {}
     for k, v in config.items():

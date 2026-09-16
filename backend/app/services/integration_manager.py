@@ -1,5 +1,3 @@
-from typing import Any, Optional
-
 import structlog
 
 from app.core.config import settings
@@ -22,7 +20,6 @@ class IntegrationManager:
         # Store encrypted config in database
         from app.core.database import async_session_factory
         from app.models.integration import Integration
-        from sqlalchemy import select
 
         async with async_session_factory() as db:
             integration = Integration(
@@ -77,6 +74,7 @@ class IntegrationManager:
     async def _test_aws(self, org_id: int) -> bool:
         """Test AWS connection."""
         import boto3
+
         try:
             client = boto3.client(
                 "sts",
@@ -92,6 +90,7 @@ class IntegrationManager:
         """Test Azure connection."""
         try:
             from azure.identity import ClientSecretCredential
+
             credential = ClientSecretCredential(
                 tenant_id=settings.AZURE_TENANT_ID,
                 client_id=settings.AZURE_CLIENT_ID,
@@ -106,6 +105,7 @@ class IntegrationManager:
         """Test GCP connection."""
         try:
             from google.auth import default
+
             credentials, project = default()
             return True
         except Exception:
@@ -114,6 +114,7 @@ class IntegrationManager:
     async def _test_github(self, org_id: int) -> bool:
         """Test GitHub connection."""
         import httpx
+
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 "https://api.github.com/user",

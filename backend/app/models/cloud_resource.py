@@ -2,7 +2,15 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, JSON, Float
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    JSON,
+    Float,
 )
 from sqlalchemy.orm import relationship
 
@@ -22,6 +30,7 @@ class CloudProvider(str, enum.Enum):
 
 class CloudResource(Base):
     """Cloud infrastructure resource discovered across providers."""
+
     __tablename__ = "cloud_resources"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -76,4 +85,6 @@ class CloudResource(Base):
     asset = relationship("Asset", back_populates="cloud_resources")
 
     def __repr__(self):
-        return f"<CloudResource {self.provider}:{self.resource_type}:{self.resource_id}>"
+        return (
+            f"<CloudResource {self.provider}:{self.resource_type}:{self.resource_id}>"
+        )

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -44,7 +43,9 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 1
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://pulse:pulse@localhost:5432/blacksentinel_pulse"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://pulse:pulse@localhost:5432/blacksentinel_pulse"
+    )
     DATABASE_ECHO: bool = False
 
     # Redis
@@ -108,11 +109,11 @@ def get_settings() -> Settings:
     """Create Settings with comma-separated env var support."""
     # Pre-process list env vars before pydantic-settings sees them
     os.environ["ALLOWED_ORIGINS"] = json.dumps(
-        _parse_comma_env("ALLOWED_ORIGINS", ["http://localhost:3000", "http://localhost:5173"])
+        _parse_comma_env(
+            "ALLOWED_ORIGINS", ["http://localhost:3000", "http://localhost:5173"]
+        )
     )
-    os.environ["ALLOWED_HOSTS"] = json.dumps(
-        _parse_comma_env("ALLOWED_HOSTS", ["*"])
-    )
+    os.environ["ALLOWED_HOSTS"] = json.dumps(_parse_comma_env("ALLOWED_HOSTS", ["*"]))
     return Settings()
 
 

@@ -1,10 +1,9 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import json
 import asyncio
 from datetime import datetime
 
 from app.core.security import decode_token
-from app.core.cache import cache
 
 router = APIRouter()
 
@@ -74,28 +73,39 @@ async def websocket_endpoint(websocket: WebSocket):
         user_id = int(payload.get("sub"))
         await manager.connect(websocket, user_id)
 
-        await websocket.send_json({
-            "type": "connected",
-            "message": "Connected to BlackSentinel Pulse",
-            "timestamp": datetime.utcnow().isoformat(),
-        })
+        await websocket.send_json(
+            {
+                "type": "connected",
+                "message": "Connected to BlackSentinel Pulse",
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        )
 
         heartbeat_task = asyncio.create_task(send_heartbeat(websocket))
 
-        while True:
-            data = await websocket.receive_text()
-            message = json.loads(data)
+        try:
+            while True:
+                data = await websocket.receive_text()
+                message = json.loads(data)
 
-            if message.get("type") == "ping":
-                await websocket.send_json({"type": "pong", "timestamp": datetime.utcnow().isoformat()})
+                if message.get("type") == "ping":
+                    await websocket.send_json(
+                        {"type": "pong", "timestamp": datetime.utcnow().isoformat()}
+                    )
 
-            elif message.get("type") == "subscribe":
-                channel = message.get("channel", "general")
-                await websocket.send_json({"type": "subscribed", "channel": channel})
+                elif message.get("type") == "subscribe":
+                    channel = message.get("channel", "general")
+                    await websocket.send_json(
+                        {"type": "subscribed", "channel": channel}
+                    )
 
-            elif message.get("type") == "unsubscribe":
-                channel = message.get("channel", "general")
-                await websocket.send_json({"type": "unsubscribed", "channel": channel})
+                elif message.get("type") == "unsubscribe":
+                    channel = message.get("channel", "general")
+                    await websocket.send_json(
+                        {"type": "unsubscribed", "channel": channel}
+                    )
+        finally:
+            heartbeat_task.cancel()
 
     except asyncio.TimeoutError:
         await websocket.close(code=4001, reason="Auth timeout")
@@ -112,51 +122,61 @@ async def send_heartbeat(websocket: WebSocket):
     while True:
         try:
             await asyncio.sleep(30)
-            await websocket.send_json({
-                "type": "heartbeat",
-                "timestamp": datetime.utcnow().isoformat(),
-            })
+            await websocket.send_json(
+                {
+                    "type": "heartbeat",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            )
         except Exception:
             break
 
 
 async def notify_asset_discovered(org_id: int, asset_data: dict):
     """Notify all connected users about a new asset discovery."""
-    await manager.broadcast({
-        "type": "asset_discovered",
-        "organization_id": org_id,
-        "data": asset_data,
-        "timestamp": datetime.utcnow().isoformat(),
-    })
+    await manager.broadcast(
+        {
+            "type": "asset_discovered",
+            "organization_id": org_id,
+            "data": asset_data,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    )
 
 
 async def notify_vulnerability_found(org_id: int, vuln_data: dict):
     """Notify about new vulnerability findings."""
-    await manager.broadcast({
-        "type": "vulnerability_found",
-        "organization_id": org_id,
-        "data": vuln_data,
-        "timestamp": datetime.utcnow().isoformat(),
-    })
+    await manager.broadcast(
+        {
+            "type": "vulnerability_found",
+            "organization_id": org_id,
+            "data": vuln_data,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    )
 
 
 async def notify_alert_created(org_id: int, alert_data: dict):
     """Notify about new alerts."""
-    await manager.broadcast({
-        "type": "alert_created",
-        "organization_id": org_id,
-        "data": alert_data,
-        "timestamp": datetime.utcnow().isoformat(),
-    })
+    await manager.broadcast(
+        {
+            "type": "alert_created",
+            "organization_id": org_id,
+            "data": alert_data,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    )
 
 
 async def notify_scan_progress(org_id: int, scan_id: str, progress: int, status: str):
     """Notify about scan progress updates."""
-    await manager.broadcast({
-        "type": "scan_progress",
-        "organization_id": org_id,
-        "scan_id": scan_id,
-        "progress": progress,
-        "status": status,
-        "timestamp": datetime.utcnow().isoformat(),
-    })
+    await manager.broadcast(
+        {
+            "type": "scan_progress",
+            "organization_id": org_id,
+            "scan_id": scan_id,
+            "progress": progress,
+            "status": status,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
+    )

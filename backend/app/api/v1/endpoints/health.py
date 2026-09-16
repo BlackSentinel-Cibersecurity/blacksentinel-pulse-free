@@ -70,9 +70,9 @@ async def metrics():
     async with async_session_factory() as db:
         assets = (await db.execute(select(func.count(Asset.id)))).scalar() or 0
         vulns = (await db.execute(select(func.count(Vulnerability.id)))).scalar() or 0
-        alerts = (await db.execute(
-            select(func.count(Alert.id)).where(Alert.status == "open")
-        )).scalar() or 0
+        alerts = (
+            await db.execute(select(func.count(Alert.id)).where(Alert.status == "open"))
+        ).scalar() or 0
 
     metrics_text = f"""# HELP pulse_assets_total Total number of assets
 # TYPE pulse_assets_total gauge
@@ -91,4 +91,5 @@ pulse_alerts_open_total {alerts}
 pulse_info{{version="{settings.VERSION}"}} 1
 """
     from fastapi.responses import PlainTextResponse
+
     return PlainTextResponse(content=metrics_text, media_type="text/plain")

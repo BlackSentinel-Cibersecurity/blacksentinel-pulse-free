@@ -20,9 +20,7 @@ class CacheService:
         return await self.client.get(key)
 
     async def set(self, key: str, value: str, ttl: int = None) -> None:
-        await self.client.set(
-            key, value, ex=ttl or settings.REDIS_CACHE_TTL
-        )
+        await self.client.set(key, value, ex=ttl or settings.REDIS_CACHE_TTL)
 
     async def delete(self, key: str) -> None:
         await self.client.delete(key)

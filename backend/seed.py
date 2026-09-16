@@ -8,50 +8,93 @@ import random
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy import select
-from app.core.config import settings
-from app.core.database import Base
-from app.core.security import hash_password
-from app.models.user import User, UserRole
-from app.models.organization import Organization
-from app.models.asset import Asset, AssetType, AssetStatus
-from app.models.vulnerability import Vulnerability, Severity, VulnerabilityStatus
-from app.models.scan import Scan, ScanType, ScanStatus
-from app.models.alert import Alert, AlertSeverity, AlertStatus
-from app.models.threat import ThreatIntelligence, ThreatType
-from app.models.certificate import Certificate
-from app.models.dns_record import DNSRecord
+from sqlalchemy.ext.asyncio import (  # noqa: E402
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+)
+from sqlalchemy import select  # noqa: E402
+from app.core.config import settings  # noqa: E402
+from app.core.database import Base  # noqa: E402
+from app.core.security import hash_password  # noqa: E402
+from app.models.user import User, UserRole  # noqa: E402
+from app.models.organization import Organization  # noqa: E402
+from app.models.asset import Asset, AssetType, AssetStatus  # noqa: E402
+from app.models.vulnerability import (  # noqa: E402
+    Vulnerability,
+    Severity,
+    VulnerabilityStatus,
+)
+from app.models.scan import Scan, ScanType, ScanStatus  # noqa: E402
+from app.models.alert import Alert, AlertSeverity, AlertStatus  # noqa: E402
+from app.models.threat import ThreatIntelligence, ThreatType  # noqa: E402
 
 # Use configured database URL (PostgreSQL in Docker, SQLite locally)
 _database_url = settings.DATABASE_URL
 
 
 DEMO_DOMAINS = [
-    "blacksentinel.com", "api.blacksentinel.com", "app.blacksentinel.com",
-    "staging.blacksentinel.com", "admin.blacksentinel.com", "mail.blacksentinel.com",
-    "cdn.blacksentinel.com", "grafana.blacksentinel.com", "jira.blacksentinel.com",
-    "git.blacksentinel.com", "ci.blacksentinel.com", "monitoring.blacksentinel.com",
+    "blacksentinel.com",
+    "api.blacksentinel.com",
+    "app.blacksentinel.com",
+    "staging.blacksentinel.com",
+    "admin.blacksentinel.com",
+    "mail.blacksentinel.com",
+    "cdn.blacksentinel.com",
+    "grafana.blacksentinel.com",
+    "jira.blacksentinel.com",
+    "git.blacksentinel.com",
+    "ci.blacksentinel.com",
+    "monitoring.blacksentinel.com",
 ]
 
 DEMO_IPS = [
-    "104.21.45.67", "104.21.46.68", "172.67.189.34", "172.67.189.35",
-    "52.84.12.100", "52.84.12.101", "34.102.136.180", "34.102.136.181",
-    "13.107.42.14", "20.190.151.68", "20.190.151.69", "40.126.32.140",
+    "104.21.45.67",
+    "104.21.46.68",
+    "172.67.189.34",
+    "172.67.189.35",
+    "52.84.12.100",
+    "52.84.12.101",
+    "34.102.136.180",
+    "34.102.136.181",
+    "13.107.42.14",
+    "20.190.151.68",
+    "20.190.151.69",
+    "40.126.32.140",
 ]
 
 VULN_TEMPLATES = [
     {"name": "Open Redirect", "severity": Severity.LOW, "cwe": "CWE-601"},
-    {"name": "Cross-Site Scripting (XSS)", "severity": Severity.MEDIUM, "cwe": "CWE-79"},
+    {
+        "name": "Cross-Site Scripting (XSS)",
+        "severity": Severity.MEDIUM,
+        "cwe": "CWE-79",
+    },
     {"name": "SQL Injection", "severity": Severity.CRITICAL, "cwe": "CWE-89"},
     {"name": "Remote Code Execution", "severity": Severity.CRITICAL, "cwe": "CWE-94"},
-    {"name": "Server-Side Request Forgery", "severity": Severity.HIGH, "cwe": "CWE-918"},
-    {"name": "Insecure Direct Object Reference", "severity": Severity.MEDIUM, "cwe": "CWE-639"},
+    {
+        "name": "Server-Side Request Forgery",
+        "severity": Severity.HIGH,
+        "cwe": "CWE-918",
+    },
+    {
+        "name": "Insecure Direct Object Reference",
+        "severity": Severity.MEDIUM,
+        "cwe": "CWE-639",
+    },
     {"name": "Broken Authentication", "severity": Severity.HIGH, "cwe": "CWE-287"},
     {"name": "Sensitive Data Exposure", "severity": Severity.HIGH, "cwe": "CWE-200"},
     {"name": "XML External Entity", "severity": Severity.HIGH, "cwe": "CWE-611"},
-    {"name": "Security Misconfiguration", "severity": Severity.MEDIUM, "cwe": "CWE-538"},
-    {"name": "Cross-Site Request Forgery", "severity": Severity.MEDIUM, "cwe": "CWE-352"},
+    {
+        "name": "Security Misconfiguration",
+        "severity": Severity.MEDIUM,
+        "cwe": "CWE-538",
+    },
+    {
+        "name": "Cross-Site Request Forgery",
+        "severity": Severity.MEDIUM,
+        "cwe": "CWE-352",
+    },
     {"name": "Path Traversal", "severity": Severity.HIGH, "cwe": "CWE-22"},
     {"name": "Information Disclosure", "severity": Severity.LOW, "cwe": "CWE-200"},
     {"name": "Deprecated TLS Version", "severity": Severity.MEDIUM, "cwe": "CWE-326"},
@@ -61,7 +104,9 @@ VULN_TEMPLATES = [
 
 async def seed():
     engine = create_async_engine(_database_url)
-    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -89,22 +134,34 @@ async def seed():
 
         # Create users
         admin = User(
-            email="admin@blacksentinel.com", username="admin",
+            email="admin@blacksentinel.com",
+            username="admin",
             hashed_password=hash_password("admin123"),
-            full_name="System Administrator", role=UserRole.SUPER_ADMIN,
-            is_active=True, is_verified=True, organization_id=org.id,
+            full_name="System Administrator",
+            role=UserRole.SUPER_ADMIN,
+            is_active=True,
+            is_verified=True,
+            organization_id=org.id,
         )
         analyst = User(
-            email="analyst@blacksentinel.com", username="analyst",
+            email="analyst@blacksentinel.com",
+            username="analyst",
             hashed_password=hash_password("analyst123"),
-            full_name="SOC Analyst", role=UserRole.SOC_ANALYST_3,
-            is_active=True, is_verified=True, organization_id=org.id,
+            full_name="SOC Analyst",
+            role=UserRole.SOC_ANALYST_3,
+            is_active=True,
+            is_verified=True,
+            organization_id=org.id,
         )
         viewer = User(
-            email="viewer@blacksentinel.com", username="viewer",
+            email="viewer@blacksentinel.com",
+            username="viewer",
             hashed_password=hash_password("viewer123"),
-            full_name="Read Only User", role=UserRole.VIEWER,
-            is_active=True, is_verified=True, organization_id=org.id,
+            full_name="Read Only User",
+            role=UserRole.VIEWER,
+            is_active=True,
+            is_verified=True,
+            organization_id=org.id,
         )
         db.add_all([admin, analyst, viewer])
         await db.flush()
@@ -116,7 +173,9 @@ async def seed():
                 uuid=str(uuid.uuid4()),
                 name=domain,
                 asset_type=AssetType.DOMAIN if i == 0 else AssetType.SUBDOMAIN,
-                status=random.choice([AssetStatus.ACTIVE, AssetStatus.ACTIVE, AssetStatus.MONITORED]),
+                status=random.choice(
+                    [AssetStatus.ACTIVE, AssetStatus.ACTIVE, AssetStatus.MONITORED]
+                ),
                 risk_score=random.uniform(0.1, 0.9),
                 criticality=random.choice(["critical", "high", "medium", "low"]),
                 ip_address=random.choice(DEMO_IPS),
@@ -157,11 +216,18 @@ async def seed():
                     title=template["name"],
                     severity=template["severity"],
                     cwe_id=template.get("cwe"),
-                    status=random.choice([VulnerabilityStatus.OPEN, VulnerabilityStatus.OPEN, VulnerabilityStatus.IN_PROGRESS]),
+                    status=random.choice(
+                        [
+                            VulnerabilityStatus.OPEN,
+                            VulnerabilityStatus.OPEN,
+                            VulnerabilityStatus.IN_PROGRESS,
+                        ]
+                    ),
                     description=f"Detected {template['name']} on {asset.name}",
                     risk_score=random.uniform(0.2, 1.0),
                     asset_id=asset.id,
-                    discovered_at=datetime.utcnow() - timedelta(days=random.randint(0, 30)),
+                    discovered_at=datetime.utcnow()
+                    - timedelta(days=random.randint(0, 30)),
                 )
                 vulns.append(vuln)
         db.add_all(vulns)
@@ -173,8 +239,16 @@ async def seed():
             scan = Scan(
                 scan_id=str(uuid.uuid4()),
                 name=f"Discovery Scan #{i+1}",
-                scan_type=random.choice([ScanType.FULL_DISCOVERY, ScanType.VULNERABILITY_SCAN, ScanType.ACTIVE_SCAN]),
-                status=random.choice([ScanStatus.COMPLETED, ScanStatus.COMPLETED, ScanStatus.RUNNING]),
+                scan_type=random.choice(
+                    [
+                        ScanType.FULL_DISCOVERY,
+                        ScanType.VULNERABILITY_SCAN,
+                        ScanType.ACTIVE_SCAN,
+                    ]
+                ),
+                status=random.choice(
+                    [ScanStatus.COMPLETED, ScanStatus.COMPLETED, ScanStatus.RUNNING]
+                ),
                 progress=random.randint(0, 100),
                 started_at=datetime.utcnow() - timedelta(days=random.randint(0, 7)),
                 completed_at=datetime.utcnow() - timedelta(hours=random.randint(0, 48)),
@@ -201,8 +275,12 @@ async def seed():
                 alert_id=str(uuid.uuid4()),
                 title=title,
                 description=f"Alert: {title} on external infrastructure",
-                severity=random.choice([AlertSeverity.CRITICAL, AlertSeverity.HIGH, AlertSeverity.MEDIUM]),
-                status=random.choice([AlertStatus.OPEN, AlertStatus.OPEN, AlertStatus.INVESTIGATING]),
+                severity=random.choice(
+                    [AlertSeverity.CRITICAL, AlertSeverity.HIGH, AlertSeverity.MEDIUM]
+                ),
+                status=random.choice(
+                    [AlertStatus.OPEN, AlertStatus.OPEN, AlertStatus.INVESTIGATING]
+                ),
                 alert_type="vulnerability",
                 organization_id=org.id,
                 created_at=datetime.utcnow() - timedelta(hours=random.randint(0, 72)),
@@ -217,7 +295,9 @@ async def seed():
                 indicator_value=asset.ip_address or asset.name,
                 indicator_type="ip_address" if asset.ip_address else "domain",
                 indicators=[asset.ip_address or asset.name],
-                threat_type=random.choice([ThreatType.MALWARE, ThreatType.C2, ThreatType.BOTNET]),
+                threat_type=random.choice(
+                    [ThreatType.MALWARE, ThreatType.C2, ThreatType.BOTNET]
+                ),
                 confidence=random.uniform(0.5, 1.0),
                 severity=random.choice(["high", "critical"]),
                 source="VirusTotal",
@@ -236,7 +316,7 @@ async def seed():
         print()
         print("Demo users created (use /api/v1/setup/initialize for production)")
         print()
-        print(f"Demo Data:")
+        print("Demo Data:")
         print(f"  Assets:          {len(assets)}")
         print(f"  Vulnerabilities: {len(vulns)}")
         print(f"  Scans:           {len(scans)}")

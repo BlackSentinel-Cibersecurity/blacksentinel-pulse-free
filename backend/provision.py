@@ -18,24 +18,36 @@ from datetime import datetime
 
 sys.path.insert(0, ".")
 
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy import select
-from app.core.config import settings
-from app.core.database import Base
-from app.core.security import hash_password, generate_api_key
-from app.models.user import User, UserRole
-from app.models.organization import Organization
+from sqlalchemy.ext.asyncio import (  # noqa: E402
+    create_async_engine,
+    async_sessionmaker,
+    AsyncSession,
+)
+from sqlalchemy import select  # noqa: E402
+from app.core.config import settings  # noqa: E402
+from app.core.security import hash_password  # noqa: E402
+from app.models.user import User, UserRole  # noqa: E402
+from app.models.organization import Organization  # noqa: E402
 
 
-async def create_org(name: str, slug: str, plan: str = "professional",
-                     admin_email: str = None, admin_password: str = None):
+async def create_org(
+    name: str,
+    slug: str,
+    plan: str = "professional",
+    admin_email: str = None,
+    admin_password: str = None,
+):
     """Create a new organization with admin user."""
     engine = create_async_engine(settings.DATABASE_URL)
-    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
 
     async with async_session() as db:
         # Check if org exists
-        existing = await db.execute(select(Organization).where(Organization.slug == slug))
+        existing = await db.execute(
+            select(Organization).where(Organization.slug == slug)
+        )
         if existing.scalar_one_or_none():
             print(f"Organization '{slug}' already exists!")
             await engine.dispose()
@@ -47,16 +59,16 @@ async def create_org(name: str, slug: str, plan: str = "professional",
             "professional": {"max_assets": 10000, "max_users": 10, "max_scans": 100},
             "enterprise": {"max_assets": 100000, "max_users": 100, "max_scans": 1000},
         }
-        l = limits.get(plan, limits["professional"])
+        plan_limits = limits.get(plan, limits["professional"])
 
         # Create organization
         org = Organization(
             name=name,
             slug=slug,
             plan=plan,
-            max_assets=l["max_assets"],
-            max_users=l["max_users"],
-            max_scans_per_day=l["max_scans"],
+            max_assets=plan_limits["max_assets"],
+            max_users=plan_limits["max_users"],
+            max_scans_per_day=plan_limits["max_scans"],
         )
         db.add(org)
         await db.flush()
@@ -81,10 +93,10 @@ async def create_org(name: str, slug: str, plan: str = "professional",
         print(f"{'='*60}")
         print(f"  Slug:       {slug}")
         print(f"  Plan:       {plan}")
-        print(f"  Max Assets: {l['max_assets']:,}")
-        print(f"  Max Users:  {l['max_users']}")
-        print(f"  Max Scans:  {l['max_scans']}/day")
-        print(f"\n  Admin User:")
+        print(f"  Max Assets: {plan_limits['max_assets']:,}")
+        print(f"  Max Users:  {plan_limits['max_users']}")
+        print(f"  Max Scans:  {plan_limits['max_scans']}/day")
+        print("\n  Admin User:")
         print(f"    Email:    {admin.email}")
         print(f"    Username: {admin.username}")
         print(f"    Password: {password}")
@@ -96,10 +108,14 @@ async def create_org(name: str, slug: str, plan: str = "professional",
 async def list_orgs():
     """List all organizations."""
     engine = create_async_engine(settings.DATABASE_URL)
-    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
 
     async with async_session() as db:
-        result = await db.execute(select(Organization).order_by(Organization.created_at.desc()))
+        result = await db.execute(
+            select(Organization).order_by(Organization.created_at.desc())
+        )
         orgs = result.scalars().all()
 
         if not orgs:
@@ -111,7 +127,9 @@ async def list_orgs():
         print("-" * 95)
         for org in orgs:
             status = "Active" if org.is_active else "Inactive"
-            print(f"{org.name:<30} {org.slug:<20} {org.plan:<15} {org.max_assets:<10} {status}")
+            print(
+                f"{org.name:<30} {org.slug:<20} {org.plan:<15} {org.max_assets:<10} {status}"
+            )
         print()
 
     await engine.dispose()
@@ -120,7 +138,9 @@ async def list_orgs():
 async def deactivate_org(slug: str):
     """Deactivate an organization."""
     engine = create_async_engine(settings.DATABASE_URL)
-    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
 
     async with async_session() as db:
         result = await db.execute(select(Organization).where(Organization.slug == slug))
@@ -141,7 +161,9 @@ async def deactivate_org(slug: str):
 async def export_org(slug: str, format: str = "json"):
     """Export organization data."""
     engine = create_async_engine(settings.DATABASE_URL)
-    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
 
     async with async_session() as db:
         result = await db.execute(select(Organization).where(Organization.slug == slug))
@@ -190,7 +212,9 @@ def main():
     create_parser = subparsers.add_parser("create", help="Create organization")
     create_parser.add_argument("--name", required=True)
     create_parser.add_argument("--slug", required=True)
-    create_parser.add_argument("--plan", default="professional", choices=["free", "professional", "enterprise"])
+    create_parser.add_argument(
+        "--plan", default="professional", choices=["free", "professional", "enterprise"]
+    )
     create_parser.add_argument("--admin-email")
     create_parser.add_argument("--admin-password")
 
@@ -198,7 +222,9 @@ def main():
     subparsers.add_parser("list", help="List organizations")
 
     # Deactivate
-    deactivate_parser = subparsers.add_parser("deactivate", help="Deactivate organization")
+    deactivate_parser = subparsers.add_parser(
+        "deactivate", help="Deactivate organization"
+    )
     deactivate_parser.add_argument("--slug", required=True)
 
     # Export
@@ -209,7 +235,11 @@ def main():
     args = parser.parse_args()
 
     if args.command == "create":
-        asyncio.run(create_org(args.name, args.slug, args.plan, args.admin_email, args.admin_password))
+        asyncio.run(
+            create_org(
+                args.name, args.slug, args.plan, args.admin_email, args.admin_password
+            )
+        )
     elif args.command == "list":
         asyncio.run(list_orgs())
     elif args.command == "deactivate":

@@ -36,14 +36,20 @@ class ThreatIntelLookup:
 
         # Aggregate results
         if results["sources"]:
-            malicious_votes = sum(1 for s in results["sources"] if s.get("is_malicious"))
+            malicious_votes = sum(
+                1 for s in results["sources"] if s.get("is_malicious")
+            )
             total_votes = len(results["sources"])
             results["is_malicious"] = malicious_votes > 0
-            results["confidence"] = malicious_votes / total_votes if total_votes > 0 else 0
+            results["confidence"] = (
+                malicious_votes / total_votes if total_votes > 0 else 0
+            )
 
         return results
 
-    async def _lookup_virustotal(self, indicator: str, indicator_type: str) -> Optional[dict]:
+    async def _lookup_virustotal(
+        self, indicator: str, indicator_type: str
+    ) -> Optional[dict]:
         """Look up indicator in VirusTotal."""
         type_map = {
             "ip": "ip_addresses",
@@ -90,7 +96,10 @@ class ThreatIntelLookup:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     "https://api.abuseipdb.com/api/v2/check",
-                    headers={"Key": settings.ABUSEIPDB_API_KEY, "Accept": "application/json"},
+                    headers={
+                        "Key": settings.ABUSEIPDB_API_KEY,
+                        "Accept": "application/json",
+                    },
                     params={"ipAddress": ip, "maxAgeInDays": 90},
                     timeout=10,
                 )

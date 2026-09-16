@@ -8,6 +8,7 @@ _redis_available = False
 try:
     import redis.asyncio as redis
     from app.core.config import settings
+
     redis_client = redis.from_url(
         settings.REDIS_URL,
         encoding="utf-8",
@@ -42,6 +43,7 @@ class InMemoryCache:
 
     async def get_pattern(self, pattern: str) -> list[str]:
         import fnmatch
+
         return [k for k in self._store if fnmatch.fnmatch(k, pattern)]
 
     async def publish(self, channel: str, message: str) -> None:

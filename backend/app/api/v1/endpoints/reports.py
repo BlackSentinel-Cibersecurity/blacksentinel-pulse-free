@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
@@ -47,61 +46,75 @@ async def get_executive_report(
 ):
     """Generate executive security report."""
     org_id = current_user.organization_id
-    from datetime import timedelta
     now = datetime.utcnow()
-    start_date = now - timedelta(days=days)
 
     # Asset stats
-    total_assets = (await db.execute(
-        select(func.count()).where(Asset.organization_id == org_id)
-    )).scalar()
+    total_assets = (
+        await db.execute(select(func.count()).where(Asset.organization_id == org_id))
+    ).scalar()
 
     # Vuln stats
-    total_vulns = (await db.execute(
-        select(func.count()).select_from(
-            select(Vulnerability.id)
-            .join(Asset, Vulnerability.asset_id == Asset.id)
-            .where(Asset.organization_id == org_id)
-            .subquery()
-        )
-    )).scalar()
-
-    critical_vulns = (await db.execute(
-        select(func.count()).select_from(
-            select(Vulnerability.id)
-            .join(Asset, Vulnerability.asset_id == Asset.id)
-            .where(
-                and_(
-                    Asset.organization_id == org_id,
-                    Vulnerability.severity == Severity.CRITICAL,
-                )
+    total_vulns = (
+        await db.execute(
+            select(func.count()).select_from(
+                select(Vulnerability.id)
+                .join(Asset, Vulnerability.asset_id == Asset.id)
+                .where(Asset.organization_id == org_id)
+                .subquery()
             )
-            .subquery()
         )
-    )).scalar()
+    ).scalar()
+
+    critical_vulns = (
+        await db.execute(
+            select(func.count()).select_from(
+                select(Vulnerability.id)
+                .join(Asset, Vulnerability.asset_id == Asset.id)
+                .where(
+                    and_(
+                        Asset.organization_id == org_id,
+                        Vulnerability.severity == Severity.CRITICAL,
+                    )
+                )
+                .subquery()
+            )
+        )
+    ).scalar()
 
     # Scan stats
-    total_scans = (await db.execute(
-        select(func.count()).where(Scan.organization_id == org_id)
-    )).scalar()
+    total_scans = (
+        await db.execute(select(func.count()).where(Scan.organization_id == org_id))
+    ).scalar()
 
     # Alert stats
-    open_alerts = (await db.execute(
-        select(func.count()).where(
-            and_(
-                Alert.organization_id == org_id,
-                Alert.status == AlertStatus.OPEN,
+    open_alerts = (
+        await db.execute(
+            select(func.count()).where(
+                and_(
+                    Alert.organization_id == org_id,
+                    Alert.status == AlertStatus.OPEN,
+                )
             )
         )
-    )).scalar()
+    ).scalar()
 
     # Risk score
-    avg_risk = (await db.execute(
-        select(func.avg(Asset.risk_score)).where(Asset.organization_id == org_id)
-    )).scalar() or 0.0
+    avg_risk = (
+        await db.execute(
+            select(func.avg(Asset.risk_score)).where(Asset.organization_id == org_id)
+        )
+    ).scalar() or 0.0
 
     # Generate executive summary
-    risk_level = "LOW" if avg_risk < 30 else "MEDIUM" if avg_risk < 60 else "HIGH" if avg_risk < 80 else "CRITICAL"
+    risk_level = (
+        "LOW"
+        if avg_risk < 30
+        else "MEDIUM"
+        if avg_risk < 60
+        else "HIGH"
+        if avg_risk < 80
+        else "CRITICAL"
+    )
     summary = f"""
     During the past {days} days, BlackSentinel Pulse monitored {total_assets} assets across your infrastructure.
     {total_vulns} vulnerabilities were identified, with {critical_vulns} rated as critical.
@@ -111,9 +124,13 @@ async def get_executive_report(
 
     recommendations = []
     if critical_vulns > 0:
-        recommendations.append(f"Immediately remediate {critical_vulns} critical vulnerabilities")
+        recommendations.append(
+            f"Immediately remediate {critical_vulns} critical vulnerabilities"
+        )
     if avg_risk > 60:
-        recommendations.append("Overall risk score is elevated - review high-risk assets")
+        recommendations.append(
+            "Overall risk score is elevated - review high-risk assets"
+        )
     if open_alerts > 10:
         recommendations.append(f"{open_alerts} open alerts need attention")
 
@@ -151,28 +168,34 @@ async def get_asset_report(
     """Generate detailed asset report."""
     org_id = current_user.organization_id
 
-    total = (await db.execute(
-        select(func.count()).where(Asset.organization_id == org_id)
-    )).scalar()
+    total = (
+        await db.execute(select(func.count()).where(Asset.organization_id == org_id))
+    ).scalar()
 
     # By type
-    type_q = select(Asset.asset_type, func.count()).where(
-        Asset.organization_id == org_id
-    ).group_by(Asset.asset_type)
+    type_q = (
+        select(Asset.asset_type, func.count())
+        .where(Asset.organization_id == org_id)
+        .group_by(Asset.asset_type)
+    )
     type_result = await db.execute(type_q)
     by_type = {str(row[0].value): row[1] for row in type_result.all()}
 
     # By status
-    status_q = select(Asset.status, func.count()).where(
-        Asset.organization_id == org_id
-    ).group_by(Asset.status)
+    status_q = (
+        select(Asset.status, func.count())
+        .where(Asset.organization_id == org_id)
+        .group_by(Asset.status)
+    )
     status_result = await db.execute(status_q)
     by_status = {str(row[0].value): row[1] for row in status_result.all()}
 
     # By criticality
-    crit_q = select(Asset.criticality, func.count()).where(
-        Asset.organization_id == org_id
-    ).group_by(Asset.criticality)
+    crit_q = (
+        select(Asset.criticality, func.count())
+        .where(Asset.organization_id == org_id)
+        .group_by(Asset.criticality)
+    )
     crit_result = await db.execute(crit_q)
     by_criticality = {str(row[0]): row[1] for row in crit_result.all()}
 
@@ -198,7 +221,11 @@ async def get_asset_report(
     )
     recent_result = await db.execute(recent_q)
     recently = [
-        {"name": a.name, "type": str(a.asset_type.value), "discovered_at": a.created_at.isoformat()}
+        {
+            "name": a.name,
+            "type": str(a.asset_type.value),
+            "discovered_at": a.created_at.isoformat(),
+        }
         for a in recent_result.scalars().all()
     ]
 

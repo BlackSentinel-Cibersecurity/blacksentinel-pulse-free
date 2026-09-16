@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from app.core.database import get_db
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_password
 from app.models.user import User, UserRole
 from app.models.organization import Organization
 
@@ -64,13 +64,19 @@ async def initialize_system(
             detail="Password must be at least 12 characters with uppercase, lowercase, number, and symbol.",
         )
     if not any(c.isupper() for c in request.admin_password):
-        raise HTTPException(status_code=400, detail="Password must contain uppercase letters.")
+        raise HTTPException(
+            status_code=400, detail="Password must contain uppercase letters."
+        )
     if not any(c.islower() for c in request.admin_password):
-        raise HTTPException(status_code=400, detail="Password must contain lowercase letters.")
+        raise HTTPException(
+            status_code=400, detail="Password must contain lowercase letters."
+        )
     if not any(c.isdigit() for c in request.admin_password):
         raise HTTPException(status_code=400, detail="Password must contain numbers.")
     if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in request.admin_password):
-        raise HTTPException(status_code=400, detail="Password must contain special characters.")
+        raise HTTPException(
+            status_code=400, detail="Password must contain special characters."
+        )
 
     # Create organization
     org = Organization(

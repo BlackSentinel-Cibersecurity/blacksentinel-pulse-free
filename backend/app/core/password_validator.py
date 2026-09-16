@@ -1,5 +1,4 @@
-import re
-import secrets
+import random
 import string
 
 
@@ -65,12 +64,8 @@ def generate_secure_password() -> str:
         has_consecutive = any(
             digits[i] == digits[i - 1] + 1 for i in range(1, len(digits))
         )
-        has_ascending = all(
-            digits[i] > digits[i - 1] for i in range(1, len(digits))
-        )
-        has_descending = all(
-            digits[i] < digits[i - 1] for i in range(1, len(digits))
-        )
+        has_ascending = all(digits[i] > digits[i - 1] for i in range(1, len(digits)))
+        has_descending = all(digits[i] < digits[i - 1] for i in range(1, len(digits)))
         if not has_consecutive and not has_ascending and not has_descending:
             break
 
@@ -79,6 +74,3 @@ def generate_secure_password() -> str:
     all_chars = uppercase + special + [str(d) for d in digits] + lowercase
     random.shuffle(all_chars)
     return "".join(all_chars)
-
-
-import random

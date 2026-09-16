@@ -1,10 +1,7 @@
 import enum
 from datetime import datetime
 
-from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, Text, JSON
-)
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String, DateTime, Enum, ForeignKey, Text, JSON
 
 from app.core.database import Base
 
@@ -29,6 +26,7 @@ class IncidentStatus(str, enum.Enum):
 
 class Incident(Base):
     """Security incident triggered by Pulse detection."""
+
     __tablename__ = "incidents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -39,14 +37,18 @@ class Incident(Base):
     status = Column(Enum(IncidentStatus), default=IncidentStatus.DETECTED)
 
     # Classification
-    incident_type = Column(String(100))  # data_breach, unauthorized_access, malware, etc.
+    incident_type = Column(
+        String(100)
+    )  # data_breach, unauthorized_access, malware, etc.
     category = Column(String(100))  # technical, physical, human
     ttps = Column(JSON, default=list)  # MITRE ATT&CK
 
     # Impact
     affected_assets = Column(JSON, default=list)
     affected_users = Column(Integer, default=0)
-    data_classification = Column(String(50))  # public, internal, confidential, restricted
+    data_classification = Column(
+        String(50)
+    )  # public, internal, confidential, restricted
     estimated_impact = Column(String(50))
 
     # Response

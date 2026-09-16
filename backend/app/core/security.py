@@ -36,7 +36,9 @@ def create_access_token(subject: Any, expires_delta: timedelta = None) -> str:
 
 def create_refresh_token(subject: Any) -> str:
     """Create a JWT refresh token."""
-    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    expire = datetime.now(timezone.utc) + timedelta(
+        days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+    )
     to_encode = {"exp": expire, "sub": str(subject), "type": "refresh"}
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
@@ -65,6 +67,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def generate_api_key() -> str:
     """Generate a secure API key."""
     import secrets
+
     return f"ps_{secrets.token_urlsafe(32)}"
 
 
@@ -87,9 +90,9 @@ def record_failed_login(user_id: int) -> bool:
         _lockout_store[user_id] = {"attempts": 0, "locked_until": None}
     _lockout_store[user_id]["attempts"] += 1
     if _lockout_store[user_id]["attempts"] >= MAX_FAILED_ATTEMPTS:
-        _lockout_store[user_id]["locked_until"] = (
-            datetime.now(timezone.utc) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
-        )
+        _lockout_store[user_id]["locked_until"] = datetime.now(
+            timezone.utc
+        ) + timedelta(minutes=LOCKOUT_DURATION_MINUTES)
         return True
     return False
 

@@ -12,12 +12,16 @@ class TOTPService:
         return pyotp.random_base32()
 
     @staticmethod
-    def get_provisioning_uri(secret: str, email: str, issuer: str = "BlackSentinel Pulse") -> str:
+    def get_provisioning_uri(
+        secret: str, email: str, issuer: str = "BlackSentinel Pulse"
+    ) -> str:
         totp = pyotp.TOTP(secret)
         return totp.provisioning_uri(name=email, issuer_name=issuer)
 
     @staticmethod
-    def generate_qr_code_base64(secret: str, email: str, issuer: str = "BlackSentinel Pulse") -> str:
+    def generate_qr_code_base64(
+        secret: str, email: str, issuer: str = "BlackSentinel Pulse"
+    ) -> str:
         uri = TOTPService.get_provisioning_uri(secret, email, issuer)
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
         qr.add_data(uri)

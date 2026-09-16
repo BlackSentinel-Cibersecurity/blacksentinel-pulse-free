@@ -28,7 +28,9 @@ class DiscoveryException(PulseException):
 
 class IntegrationException(PulseException):
     def __init__(self, provider: str, message: str):
-        super().__init__(f"Integration error with {provider}: {message}", status_code=502)
+        super().__init__(
+            f"Integration error with {provider}: {message}", status_code=502
+        )
 
 
 class AuthenticationError(PulseException):
@@ -51,7 +53,9 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(PulseException)
     async def pulse_exception_handler(request: Request, exc: PulseException):
-        logger.error("pulse_exception", message=exc.message, status_code=exc.status_code)
+        logger.error(
+            "pulse_exception", message=exc.message, status_code=exc.status_code
+        )
         content = {"error": exc.message}
         if exc.detail:
             content["detail"] = exc.detail

@@ -2,7 +2,15 @@ import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, Text, JSON
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Text,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 
@@ -39,6 +47,7 @@ class ScanStatus(str, enum.Enum):
 
 class Scan(Base):
     """Scan execution record."""
+
     __tablename__ = "scans"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -99,11 +108,16 @@ class Scan(Base):
 
     @property
     def is_complete(self) -> bool:
-        return self.status in (ScanStatus.COMPLETED, ScanStatus.FAILED, ScanStatus.CANCELLED)
+        return self.status in (
+            ScanStatus.COMPLETED,
+            ScanStatus.FAILED,
+            ScanStatus.CANCELLED,
+        )
 
 
 class ScanAsset(Base):
     """Association between scans and assets discovered during the scan."""
+
     __tablename__ = "scan_assets"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -118,11 +132,14 @@ class ScanAsset(Base):
 
 class ScanResult(Base):
     """Detailed results from a scan."""
+
     __tablename__ = "scan_results"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     scan_id = Column(Integer, ForeignKey("scans.id"), nullable=False)
-    result_type = Column(String(100), nullable=False)  # asset, vulnerability, finding, etc.
+    result_type = Column(
+        String(100), nullable=False
+    )  # asset, vulnerability, finding, etc.
     data = Column(JSON, nullable=False)
     severity = Column(String(20))
     confidence = Column(Integer, default=100)

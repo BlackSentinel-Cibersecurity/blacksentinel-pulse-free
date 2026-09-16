@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import httpx
 
@@ -14,7 +13,10 @@ class GitHubDiscoveryEngine(BaseDiscoveryEngine):
         (r"secret[_-]?key\s*[:=]\s*['\"]([^'\"]+)['\"]", "Secret Key"),
         (r"password\s*[:=]\s*['\"]([^'\"]+)['\"]", "Password"),
         (r"token\s*[:=]\s*['\"]([^'\"]+)['\"]", "Token"),
-        (r"aws[_-]?(?:access|secret)[_-]?(?:key|id)\s*[:=]\s*['\"]([^'\"]+)['\"]", "AWS Credential"),
+        (
+            r"aws[_-]?(?:access|secret)[_-]?(?:key|id)\s*[:=]\s*['\"]([^'\"]+)['\"]",
+            "AWS Credential",
+        ),
         (r"private[_-]?key\s*[:=]\s*['\"]([^'\"]+)['\"]", "Private Key"),
         (r"connection[_-]?string\s*[:=]\s*['\"]([^'\"]+)['\"]", "Connection String"),
         (r"mongodb(?:\+srv)?://[^'\"]+", "MongoDB URI"),
@@ -84,22 +86,26 @@ class GitHubDiscoveryEngine(BaseDiscoveryEngine):
                     results["repositories"].append(repo_data)
 
                     # Create asset for each repo
-                    self.add_asset({
-                        "name": repo["full_name"],
-                        "asset_type": "repository",
-                        "discovery_method": "github_api",
-                        "metadata": repo_data,
-                    })
+                    self.add_asset(
+                        {
+                            "name": repo["full_name"],
+                            "asset_type": "repository",
+                            "discovery_method": "github_api",
+                            "metadata": repo_data,
+                        }
+                    )
 
                     # Check for pages (exposed sites)
                     if repo.get("has_pages"):
                         pages_url = f"https://{target}.github.io/{repo['name']}"
-                        self.add_asset({
-                            "name": pages_url,
-                            "asset_type": "web_application",
-                            "url": pages_url,
-                            "discovery_method": "github_pages",
-                        })
+                        self.add_asset(
+                            {
+                                "name": pages_url,
+                                "asset_type": "web_application",
+                                "url": pages_url,
+                                "discovery_method": "github_pages",
+                            }
+                        )
 
                 page += 1
                 await self._rate_limit(0.5)
@@ -114,10 +120,12 @@ class GitHubDiscoveryEngine(BaseDiscoveryEngine):
             )
             if secret_search.status_code == 200:
                 for item in secret_search.json().get("items", []):
-                    results["config_files"].append({
-                        "repository": item["repository"]["full_name"],
-                        "path": item["path"],
-                        "name": item["name"],
-                    })
+                    results["config_files"].append(
+                        {
+                            "repository": item["repository"]["full_name"],
+                            "path": item["path"],
+                            "name": item["name"],
+                        }
+                    )
 
         return results

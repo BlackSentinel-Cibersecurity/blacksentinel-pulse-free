@@ -4,7 +4,14 @@ import random
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, Integer, String, Boolean, DateTime, Enum, ForeignKey, Text
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Text,
 )
 from sqlalchemy.orm import relationship
 
@@ -86,7 +93,9 @@ class User(Base):
     organization_id = Column(Integer, ForeignKey("organizations.id"))
     organization = relationship("Organization", back_populates="users")
 
-    api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
+    api_keys = relationship(
+        "APIKey", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User {self.username}>"

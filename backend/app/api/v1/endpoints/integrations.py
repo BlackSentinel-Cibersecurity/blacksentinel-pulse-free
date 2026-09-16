@@ -1,14 +1,12 @@
-from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
+from sqlalchemy import select
 
 from app.core.database import get_db
 from app.core.deps import get_current_user, RoleChecker
-from app.core.vault import encrypt_config, mask_dict_secrets
 from app.models.user import User
 from app.models.integration import Integration, IntegrationStatus
 
@@ -44,22 +42,26 @@ async def list_integrations(
     """List all available and configured integrations. Secrets are masked."""
     # Get configured integrations from DB
     result = await db.execute(
-        select(Integration).where(Integration.organization_id == current_user.organization_id)
+        select(Integration).where(
+            Integration.organization_id == current_user.organization_id
+        )
     )
     configured = result.scalars().all()
 
     configured_list = []
     for integ in configured:
-        configured_list.append({
-            "id": integ.id,
-            "provider": integ.provider,
-            "name": integ.name,
-            "status": integ.status.value if integ.status else "pending",
-            "is_enabled": integ.is_enabled,
-            "last_sync": integ.last_sync.isoformat() if integ.last_sync else None,
-            "assets_synced": integ.assets_synced,
-            "config_masked": integ.config_masked,
-        })
+        configured_list.append(
+            {
+                "id": integ.id,
+                "provider": integ.provider,
+                "name": integ.name,
+                "status": integ.status.value if integ.status else "pending",
+                "is_enabled": integ.is_enabled,
+                "last_sync": integ.last_sync.isoformat() if integ.last_sync else None,
+                "assets_synced": integ.assets_synced,
+                "config_masked": integ.config_masked,
+            }
+        )
 
     return {
         "available": [
@@ -72,7 +74,11 @@ async def list_integrations(
                 "config_fields": [
                     {"name": "access_key_id", "type": "string", "required": True},
                     {"name": "secret_access_key", "type": "password", "required": True},
-                    {"name": "regions", "type": "multi_select", "options": ["us-east-1", "us-west-2", "eu-west-1"]},
+                    {
+                        "name": "regions",
+                        "type": "multi_select",
+                        "options": ["us-east-1", "us-west-2", "eu-west-1"],
+                    },
                 ],
             },
             {
@@ -177,7 +183,15 @@ async def list_integrations(
                 ],
             },
         ],
-        "categories": ["cloud", "code", "identity", "endpoint", "ticketing", "notification", "siem"],
+        "categories": [
+            "cloud",
+            "code",
+            "identity",
+            "endpoint",
+            "ticketing",
+            "notification",
+            "siem",
+        ],
         "configured": configured_list,
     }
 
@@ -186,9 +200,7 @@ async def list_integrations(
 async def configure_integration(
     config: IntegrationConfig,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin"])),
 ):
     """Configure a new integration. API keys are encrypted before storage.
     NEVER returns the raw API key in the response."""
@@ -242,7 +254,9 @@ async def get_integration(
     integ = result.scalar_one_or_none()
 
     if not integ:
-        raise HTTPException(status_code=404, detail=f"Integration {provider} not configured")
+        raise HTTPException(
+            status_code=404, detail=f"Integration {provider} not configured"
+        )
 
     return {
         "id": integ.id,
@@ -260,9 +274,7 @@ async def get_integration(
 async def test_integration(
     provider: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin"])),
 ):
     """Test an integration connection using decrypted credentials internally."""
     result = await db.execute(
@@ -274,13 +286,14 @@ async def test_integration(
     integ = result.scalar_one_or_none()
 
     if not integ:
-        raise HTTPException(status_code=404, detail=f"Integration {provider} not configured")
+        raise HTTPException(
+            status_code=404, detail=f"Integration {provider} not configured"
+        )
 
-    # Use decrypted config internally
     try:
         from app.services.integration_manager import IntegrationManager
+
         manager = IntegrationManager()
-        decrypted = integ.config
         connected = await manager.test_connection(
             org_id=current_user.organization_id,
             provider=provider,
@@ -295,13 +308,12 @@ async def test_integration(
 async def sync_integration(
     provider: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin", "analyst"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin", "analyst"])),
 ):
     """Manually trigger a sync for an integration."""
     try:
         from app.services.tasks import sync_integration_task
+
         sync_integration_task.delay(
             org_id=current_user.organization_id,
             provider=provider,
@@ -316,9 +328,7 @@ async def sync_integration(
 async def delete_integration(
     provider: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(
-        RoleChecker(["super_admin", "admin"])
-    ),
+    current_user: User = Depends(RoleChecker(["super_admin", "admin"])),
 ):
     """Delete an integration and all stored credentials."""
     result = await db.execute(
@@ -335,4 +345,6 @@ async def delete_integration(
     await db.delete(integ)
     await db.commit()
 
-    return {"message": f"Integration {provider} deleted. All credentials permanently removed."}
+    return {
+        "message": f"Integration {provider} deleted. All credentials permanently removed."
+    }
