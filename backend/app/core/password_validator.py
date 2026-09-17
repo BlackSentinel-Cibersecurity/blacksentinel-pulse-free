@@ -56,21 +56,15 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
 
 def generate_secure_password() -> str:
     """Generate a password that passes validation."""
-    uppercase = random.sample(string.ascii_uppercase, 2)
-    special = random.sample(list(string.punctuation), 2)
-
     while True:
+        uppercase = random.sample(string.ascii_uppercase, 2)
+        special = random.sample(list(string.punctuation), 2)
         digits = random.sample(range(0, 10), 5)
-        has_consecutive = any(
-            digits[i] == digits[i - 1] + 1 for i in range(1, len(digits))
-        )
-        has_ascending = all(digits[i] > digits[i - 1] for i in range(1, len(digits)))
-        has_descending = all(digits[i] < digits[i - 1] for i in range(1, len(digits)))
-        if not has_consecutive and not has_ascending and not has_descending:
-            break
+        lowercase = random.sample(string.ascii_lowercase, 3)
 
-    lowercase = random.sample(string.ascii_lowercase, 3)
+        all_chars = uppercase + special + [str(d) for d in digits] + lowercase
+        random.shuffle(all_chars)
+        password = "".join(all_chars)
 
-    all_chars = uppercase + special + [str(d) for d in digits] + lowercase
-    random.shuffle(all_chars)
-    return "".join(all_chars)
+        if validate_password_strength(password)[0]:
+            return password
