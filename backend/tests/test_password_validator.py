@@ -66,3 +66,10 @@ def test_generate_secure_password_length_and_character_classes():
     assert any(c.islower() for c in password)
     assert any(c.isdigit() for c in password)
     assert sum(c.isdigit() for c in password) == 5
+
+
+def test_generate_secure_password_always_passes_validation():
+    for _ in range(200):
+        password = generate_secure_password()
+        ok, message = validate_password_strength(password)
+        assert ok is True, f"{password!r} failed validation: {message}"
