@@ -7,7 +7,7 @@
 > remediation are **not included in this repository's source at all**,
 > and asset inventory is capped at 25 (`backend/app/core/edition.py`). For
 > the full platform with those modules and no cap, see
-> [blacksentinel.io](https://blacksentinel.io).
+> [blacksentinel.tech](https://blacksentinel.tech).
 
 **AI Autonomous Attack Surface Management Platform**
 
@@ -37,7 +37,7 @@ digital attack surface.
 
 ### Docker (Recommended)
 ```bash
-git clone https://github.com/blacksentinel/pulse.git
+git clone https://github.com/BlackSentinel-Cibersecurity/blacksentinel-pulse-free.git
 cd pulse
 bash setup.sh
 # Access at http://localhost:3000
@@ -122,21 +122,6 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed instructions.
 
 ---
 
-## Delivery Models
-
-| Model | Description | Price Range |
-|-------|-------------|-------------|
-| **SaaS** | Hosted by BlackSentinel | $499-4,999/mo |
-| **Managed** | Managed service | $2,999-9,999/mo |
-| **On-Premise** | Self-hosted | $25K-100K/yr |
-| **Hybrid** | Control plane + local data | $5K-20K/mo |
-| **White Label** | Reseller program | Revenue share |
-| **Custom** | Bespoke development | $200/hr |
-
-See [docs/DELIVERY_MODELS.md](docs/DELIVERY_MODELS.md) for details.
-
----
-
 ## API Documentation
 
 - Swagger UI: `http://localhost:8000/api/docs`
@@ -208,12 +193,19 @@ blacksentinel-pulse/
 
 ---
 
-## License
+## Before you run it
 
-Proprietary - BlackSentinel Security
+- This is a **technical preview** and the open-source edition of the product. It comes with no warranty and no service-level commitment: try it in a test environment first.
+- It is **self-hosted**. BlackSentinel does not host it for you, and paid plans are not on sale.
+- Change every default credential and secret before exposing anything to a network. Never deploy with the example values from `.env.example` or `.env.production`.
+- Use it only on systems you own or are explicitly authorized to test or monitor. See the [Acceptable Use Policy](https://blacksentinel.tech/acceptable-use/).
 
 ## Support
 
-- Documentation: docs.blacksentinel.com
-- Email: support@blacksentinel.com
-- Issues: github.com/blacksentinel/pulse/issues
+- Bugs and questions: [open an issue](https://github.com/BlackSentinel-Cibersecurity/blacksentinel-pulse-free/issues) in this repository.
+- Security reports: follow [security.txt](https://blacksentinel.tech/.well-known/security.txt). Please do not open a public issue for a vulnerability.
+- Everything else: BlackSentinel-tech@protonmail.com
+
+## License
+
+MIT. See [LICENSE](LICENSE). The BlackSentinel name and logo are not covered by the licence.
