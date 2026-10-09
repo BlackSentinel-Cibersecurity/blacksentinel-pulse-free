@@ -9,11 +9,12 @@ pip install httpx
 ## Quick Start
 
 ```python
+import os
 from blacksentinel import PulseClient
 
 # Connect and authenticate
 client = PulseClient(base_url="http://localhost:8000")
-client.login("admin", "admin123")
+client.login("admin", os.environ["PULSE_PASSWORD"])
 
 # Or use API key
 client = PulseClient(base_url="http://localhost:8000", api_key="ps_your_api_key")

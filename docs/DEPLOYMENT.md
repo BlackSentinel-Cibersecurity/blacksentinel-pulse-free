@@ -38,7 +38,7 @@ bash setup.sh
 # Access:
 # Frontend: http://localhost:3000
 # API: http://localhost:8000/api/docs
-# Login: admin / admin123
+# Login: admin / the password setup.sh printed (or ADMIN_PASSWORD in .env)
 ```
 
 ---

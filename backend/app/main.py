@@ -24,17 +24,10 @@ async def lifespan(app: FastAPI):
     """Application lifespan - startup and shutdown."""
     logger.info("BlackSentinel Pulse starting up", version=settings.VERSION)
 
-    # Auto-generate SECRET_KEY if using default (development only)
-    import os
-    import secrets
+    # Never sign tokens with a missing or public SECRET_KEY
+    from app.core.bootstrap import ensure_first_admin, ensure_secret_key
 
-    if settings.SECRET_KEY == "change-me-in-production":
-        auto_key = secrets.token_hex(32)
-        os.environ["SECRET_KEY"] = auto_key
-        settings.SECRET_KEY = auto_key
-        logger.warning(
-            "SECRET_KEY auto-generated for development. Set SECRET_KEY env var for production."
-        )
+    ensure_secret_key()
 
     # Initialize encryption vault
     from app.core.vault import init_vault
@@ -45,6 +38,7 @@ async def lifespan(app: FastAPI):
     # Create database tables
     await init_db()
     logger.info("Database tables initialized")
+    await ensure_first_admin()
 
     yield
 

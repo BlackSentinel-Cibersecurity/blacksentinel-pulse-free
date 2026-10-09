@@ -17,7 +17,9 @@ LOCKOUT_DURATION_MINUTES = 15
 
 def validate_secret_key():
     """Reject the default secret key at startup."""
-    if settings.SECRET_KEY == "change-me-in-production":
+    from app.core.bootstrap import _PLACEHOLDER
+
+    if len(settings.SECRET_KEY or "") < 32 or _PLACEHOLDER.search(settings.SECRET_KEY):
         raise RuntimeError(
             "CRITICAL: SECRET_KEY is set to the default value. "
             "Set a strong SECRET_KEY environment variable before starting. "
