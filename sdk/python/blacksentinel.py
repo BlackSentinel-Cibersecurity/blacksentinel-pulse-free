@@ -7,7 +7,7 @@ Usage:
     client = PulseClient(base_url="http://localhost:8000", api_key="ps_xxx")
     # or login with username/password
     client = PulseClient(base_url="http://localhost:8000")
-    client.login("admin", "admin123")
+    client.login("admin", os.environ["PULSE_PASSWORD"])
 
     # Get assets
     assets = client.assets.list(page=1, page_size=10)

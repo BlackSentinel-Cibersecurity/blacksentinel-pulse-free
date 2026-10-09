@@ -19,7 +19,7 @@ echo ""
 echo "2. Login"
 TOKEN=$(curl -s -X POST "$BASE_URL/api/v1/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}' | jq -r '.access_token')
+  -d "{\"username\":\"admin\",\"password\":\"${PULSE_PASSWORD:?set PULSE_PASSWORD}\"}" | jq -r '.access_token')
 echo "Token obtained: ${TOKEN:0:20}..."
 echo ""
 
