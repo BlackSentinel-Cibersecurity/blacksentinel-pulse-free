@@ -86,7 +86,7 @@ npm run dev
 ```
 Frontend: http://localhost:3000
 API Docs: http://localhost:8000/api/docs (solo en modo DEBUG)
-Login:    admin / admin123
+Login:    admin / la ADMIN_PASSWORD de .env (scripts/init-env.sh)
 ```
 
 ---
@@ -476,14 +476,11 @@ gunzip -c /backups/blacksentinel/db_20260101_020000.sql.gz | \
 
 ---
 
-## Credenciales por Defecto (Desarrollo)
+## Primer acceso
 
-| Usuario | Password | Rol |
-|---------|----------|-----|
-| admin | admin123 | Super Admin |
-| analyst | analyst123 | Analyst |
-| viewer | viewer123 | Viewer |
-
-**IMPORTANTE**: En produccion, el primer usuario se crea via `/api/v1/setup/initialize`
-con un password fuerte que tu definas. Las credenciales de arriba solo funcionan
-si ejecutas `python seed.py` en desarrollo.
+No hay credenciales por defecto publicadas. `./scripts/init-env.sh` crea `.env`
+con un `SECRET_KEY` y una `ADMIN_PASSWORD` aleatorios. Entra como `admin` con esa
+contraseña; Pulse te pide cambiarla en el primer acceso. Si no defines
+`ADMIN_PASSWORD`, el backend muestra una contraseña aleatoria una sola vez en su
+log (`docker compose logs backend`). `seed.py` (datos demo) imprime las
+contraseñas aleatorias que asigna a los usuarios demo.
