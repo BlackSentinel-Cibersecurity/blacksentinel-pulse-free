@@ -28,6 +28,24 @@ from app.models.vulnerability import (  # noqa: E402
 from app.models.scan import Scan, ScanType, ScanStatus  # noqa: E402
 from app.models.alert import Alert, AlertSeverity, AlertStatus  # noqa: E402
 from app.models.threat import ThreatIntelligence, ThreatType  # noqa: E402
+import secrets as _secrets  # noqa: E402
+
+_SEED_PASSWORDS: dict[str, str] = {}
+
+
+def _seed_password(username: str) -> str:
+    """SECURITY FIX: the demo users used to get admin123 / analyst123 /
+    viewer123. Each now gets ADMIN_PASSWORD (admin only) or a random password,
+    printed once at the end of the seed."""
+    configured = os.environ.get("ADMIN_PASSWORD", "").strip()
+    pw = (
+        configured
+        if username == "admin" and len(configured) >= 12
+        else _secrets.token_urlsafe(12)
+    )
+    _SEED_PASSWORDS[username] = pw
+    return pw
+
 
 # Use configured database URL (PostgreSQL in Docker, SQLite locally)
 _database_url = settings.DATABASE_URL
@@ -136,7 +154,7 @@ async def seed():
         admin = User(
             email="admin@blacksentinel.com",
             username="admin",
-            hashed_password=hash_password("admin123"),
+            hashed_password=hash_password(_seed_password("admin")),
             full_name="System Administrator",
             role=UserRole.SUPER_ADMIN,
             is_active=True,
@@ -146,7 +164,7 @@ async def seed():
         analyst = User(
             email="analyst@blacksentinel.com",
             username="analyst",
-            hashed_password=hash_password("analyst123"),
+            hashed_password=hash_password(_seed_password("analyst")),
             full_name="SOC Analyst",
             role=UserRole.SOC_ANALYST_3,
             is_active=True,
@@ -156,7 +174,7 @@ async def seed():
         viewer = User(
             email="viewer@blacksentinel.com",
             username="viewer",
-            hashed_password=hash_password("viewer123"),
+            hashed_password=hash_password(_seed_password("viewer")),
             full_name="Read Only User",
             role=UserRole.VIEWER,
             is_active=True,
@@ -314,7 +332,9 @@ async def seed():
         print()
         print("Organization: Default Organization")
         print()
-        print("Demo users created (use /api/v1/setup/initialize for production)")
+        print("Demo users (random passwords, shown only this once):")
+        for name, pw in _SEED_PASSWORDS.items():
+            print(f"  {name:<8} {pw}")
         print()
         print("Demo Data:")
         print(f"  Assets:          {len(assets)}")

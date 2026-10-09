@@ -53,12 +53,13 @@ uvicorn app.main:app --reload
 cd frontend && npm install && npm run dev
 ```
 
-### Default Credentials
-| User | Password | Role |
-|------|----------|------|
-| `admin` | `admin123` | Super Admin |
-| `analyst` | `analyst123` | Analyst |
-| `viewer` | `viewer123` | Viewer |
+### First sign-in
+There are no published default credentials. Run `./scripts/init-env.sh` before the
+first start: it writes `.env` with a random `SECRET_KEY` and `ADMIN_PASSWORD`.
+Sign in as `admin` with that password; Pulse asks you to change it right away.
+Without `ADMIN_PASSWORD`, the backend prints a random first-admin password once
+in its log (`docker compose logs backend`). `seed.py` (demo data) prints the
+random passwords it gives the demo users.
 
 ---
 

@@ -103,7 +103,7 @@ asyncio.run(create())
     log "  API Docs:   http://localhost/api/v1/../api/docs"
     log "  Grafana:    http://localhost:3001"
     echo ""
-    log "  Login: admin / admin123"
+    log "  Login: admin / the ADMIN_PASSWORD in .env (scripts/init-env.sh)"
     echo ""
 }
 
