@@ -1,0 +1,137 @@
+/* ===========================================================================
+   BlackSentinel brand theme — drop-in.
+   Applies the website's design system (ink + mint/cyan palette, Syne/Outfit/
+   IBM Plex Mono type, dark spatial surfaces) to any product's open-source
+   edition. Self-contained: it imports its own fonts and styles base elements
+   and the common UI patterns, so a product looks like BlackSentinel without
+   rewriting its components.
+
+   Import it LAST, after the app's own stylesheets, so it wins. See THEME.md
+   for where to import per stack.
+   =========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --bs-ink: #05070b;
+  --bs-ink-2: #0a0e15;
+  --bs-panel: #0c1017;
+  --bs-panel-2: #11161f;
+  --bs-line: rgba(203, 220, 239, .14);
+  --bs-line-strong: rgba(203, 220, 239, .24);
+  --bs-text: #f3f7fb;
+  --bs-muted: #aab6c5;
+  --bs-signal: #70edbc;   /* mint */
+  --bs-signal-hot: #b8ead6;
+  --bs-cyan: #86f7ec;
+  --bs-ice: #b9d3e9;
+  --bs-mint: #76e2d1;
+  --bs-violet: #b8a4ff;
+  --bs-danger: #ff8a8a;
+  --bs-display: 'Syne', ui-sans-serif, system-ui, sans-serif;
+  --bs-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --bs-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --bs-radius: 14px;
+  color-scheme: dark;
+}
+
+html, body {
+  background: var(--bs-ink) !important;
+  color: var(--bs-text) !important;
+  font-family: var(--bs-sans) !important;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  background-image:
+    radial-gradient(1100px 640px at 84% -12%, rgba(112, 237, 188, .13), transparent 70%),
+    radial-gradient(800px 620px at -9% 58%, rgba(118, 226, 209, .055), transparent 76%) !important;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3 {
+  font-family: var(--bs-display) !important;
+  color: var(--bs-text);
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+code, pre, kbd, samp, .mono, [class*="mono"] { font-family: var(--bs-mono) !important; }
+a { color: var(--bs-cyan); }
+a:hover { color: var(--bs-signal-hot); }
+::selection { background: rgba(112, 237, 188, .3); color: #fff; }
+hr { border: 0; border-top: 1px solid var(--bs-line); }
+
+/* Surfaces — common card/panel/container patterns */
+.card, .panel, .box, .tile, .widget, .surface, .modal, .dialog,
+[class*="card"], [class*="panel"], [class*="Card"], [class*="Panel"] {
+  background-color: var(--bs-panel);
+  border-color: var(--bs-line);
+  border-radius: var(--bs-radius);
+  color: var(--bs-text);
+}
+
+/* Controls */
+button, .btn, .button, [class*="btn"], [class*="Button"],
+input[type="button"], input[type="submit"], input[type="reset"] {
+  font-family: var(--bs-sans);
+  border-radius: 100px;
+  transition: filter .15s ease, transform .15s ease, border-color .15s ease;
+}
+button:not(:disabled):hover, .btn:not(:disabled):hover { filter: brightness(1.08); }
+.btn-primary, .button-primary, [class*="primary"]:is(button,.btn,.button),
+button[type="submit"], input[type="submit"] {
+  background: var(--bs-signal) !important;
+  color: #04120d !important;
+  border: 1px solid transparent !important;
+  font-weight: 600;
+}
+.btn-secondary, .btn-ghost, .button-secondary, [class*="ghost"]:is(button,.btn,.button) {
+  background: rgba(239, 255, 245, .03) !important;
+  color: var(--bs-text) !important;
+  border: 1px solid var(--bs-line) !important;
+}
+
+/* Inputs */
+input, select, textarea {
+  background-color: var(--bs-ink-2) !important;
+  color: var(--bs-text) !important;
+  border: 1px solid var(--bs-line) !important;
+  border-radius: 10px;
+  font-family: var(--bs-sans) !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--bs-signal) !important;
+  box-shadow: 0 0 0 3px rgba(112, 237, 188, .16) !important;
+}
+::placeholder { color: var(--bs-muted); opacity: .7; }
+
+/* Tables */
+table { border-color: var(--bs-line); color: var(--bs-text); }
+th { font-family: var(--bs-mono); color: var(--bs-muted); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; font-size: .78em; }
+td, th { border-color: var(--bs-line); }
+tr:hover > td { background: rgba(203, 220, 239, .03); }
+
+/* Navs / sidebars / headers */
+nav, header, aside, .sidebar, .navbar, .topbar,
+[class*="sidebar"], [class*="navbar"], [class*="header"] {
+  background-color: color-mix(in srgb, var(--bs-ink) 86%, transparent);
+  border-color: var(--bs-line);
+}
+
+/* Status accents */
+.success, .ok, [class*="success"] { color: var(--bs-signal) !important; }
+.error, .danger, [class*="error"], [class*="danger"] { color: var(--bs-danger) !important; }
+.warning, [class*="warn"] { color: #ffcf8a !important; }
+.badge, .tag, .pill, .chip, [class*="badge"], [class*="chip"], [class*="tag"] {
+  border-radius: 100px; border: 1px solid var(--bs-line); color: var(--bs-muted);
+  font-family: var(--bs-mono); font-size: .76em; letter-spacing: .03em;
+}
+
+/* Scrollbar */
+* { scrollbar-color: var(--bs-line-strong) transparent; }
+*::-webkit-scrollbar { width: 11px; height: 11px; }
+*::-webkit-scrollbar-thumb { background: var(--bs-line-strong); border-radius: 100px; border: 3px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  button, .btn { transition: none; }
+}
