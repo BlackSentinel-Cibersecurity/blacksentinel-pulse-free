@@ -1,3 +1,4 @@
+import re
 import socket
 
 import nmap
@@ -64,7 +65,17 @@ class NetworkDiscoveryEngine(BaseDiscoveryEngine):
 
     async def discover(self, target: str, ports: str = "top-1000", **kwargs) -> dict:
         """Scan target for open ports and services."""
-        port_range = self.TOP_PORTS.get(ports, ports)
+        # Reject targets/ports that are not strict IP/CIDR or a safe port spec:
+        # python-nmap tokenizes these into the nmap argv, so an unvalidated value
+        # could inject extra flags (-oN file write, --script, -iL). (CWE-88)
+        if not await self.validate_target(target):
+            raise ValueError(f"Invalid scan target (expected IP or CIDR): {target!r}")
+        if ports in self.TOP_PORTS:
+            port_range = self.TOP_PORTS[ports]
+        else:
+            if not re.fullmatch(r"[0-9]{1,5}(?:-[0-9]{1,5})?(?:,[0-9]{1,5}(?:-[0-9]{1,5})?)*", ports or ""):
+                raise ValueError(f"Invalid port specification: {ports!r}")
+            port_range = ports
 
         results = {
             "target": target,

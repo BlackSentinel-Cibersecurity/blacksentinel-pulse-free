@@ -4,7 +4,7 @@ services:
     container_name: blacksentinel-db
     environment:
       POSTGRES_USER: blacksentinel
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-bspulse2024}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run ./scripts/init-env.sh to generate secrets}
       POSTGRES_DB: blacksentinel
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -34,7 +34,7 @@ services:
       dockerfile: Dockerfile.backend
     container_name: blacksentinel-backend
     environment:
-      DATABASE_URL: postgresql+asyncpg://blacksentinel:${DB_PASSWORD:-bspulse2024}@postgres:5432/blacksentinel
+      DATABASE_URL: postgresql+asyncpg://blacksentinel:${DB_PASSWORD:?Run ./scripts/init-env.sh to generate secrets}@postgres:5432/blacksentinel
       REDIS_URL: redis://redis:6379/0
       # From .env (run scripts/init-env.sh). Compose does not run commands, so the
       # old default here was the literal text "$(python3 ...)": a public key.

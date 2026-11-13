@@ -63,7 +63,7 @@ class Settings(BaseSettings):
 
     # CORS - parsed from comma-separated env var (ALLOWED_ORIGINS)
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
-    ALLOWED_HOSTS: list[str] = ["*"]
+    ALLOWED_HOSTS: list[str] = ["localhost", "127.0.0.1"]
 
     # External APIs
     SHODAN_API_KEY: str = ""
@@ -113,7 +113,7 @@ def get_settings() -> Settings:
             "ALLOWED_ORIGINS", ["http://localhost:3000", "http://localhost:5173"]
         )
     )
-    os.environ["ALLOWED_HOSTS"] = json.dumps(_parse_comma_env("ALLOWED_HOSTS", ["*"]))
+    os.environ["ALLOWED_HOSTS"] = json.dumps(_parse_comma_env("ALLOWED_HOSTS", ["localhost", "127.0.0.1"]))
     return Settings()
 
 
